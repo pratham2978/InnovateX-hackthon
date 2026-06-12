@@ -2,6 +2,11 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
+if (process.env.NODE_ENV === "production" || process.env.RENDER === "true") {
+  console.log("[Postinstall] Production/Render environment detected. Skipping build-time Python installation.");
+  process.exit(0);
+}
+
 const venvPath = path.join(__dirname, "venv");
 const dotVenvPath = path.join(__dirname, ".venv");
 

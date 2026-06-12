@@ -3,7 +3,7 @@ services:
     name: synapse-ai-hackathon
     runtime: node
     rootDir: backend
-    buildCommand: python3 -m venv venv && ./venv/bin/pip install -r ../requirements.txt && npm install --ignore-scripts
+    buildCommand: npm install
     startCommand: node server.js
     envVars:
       - key: NODE_ENV

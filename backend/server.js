@@ -54,6 +54,75 @@ const getPythonPath = () => {
   }
 };
 
+const ensurePythonDeps = () => {
+  const { execSync } = require("child_process");
+  
+  if (process.env.NODE_ENV !== "production") {
+    console.log("[ensurePythonDeps] Local development environment. Skipping runtime package installation.");
+    return;
+  }
+  
+  console.log("[ensurePythonDeps] Production environment. Verifying/installing Python dependencies...");
+  
+  // 1. Check if pip is available
+  let hasPip = false;
+  try {
+    execSync("python3 -m pip --version", { stdio: "ignore" });
+    hasPip = true;
+    console.log("[ensurePythonDeps] pip is already installed.");
+  } catch (e) {
+    console.log("[ensurePythonDeps] pip is not available via 'python3 -m pip'. Attempting to bootstrap pip...");
+  }
+  
+  if (!hasPip) {
+    try {
+      console.log("[ensurePythonDeps] Bootstrapping pip using ensurepip...");
+      execSync("python3 -m ensurepip --default-pip", { stdio: "inherit" });
+      hasPip = true;
+    } catch (err) {
+      console.log("[ensurePythonDeps] ensurepip failed. Attempting to download get-pip.py...");
+      try {
+        const fs = require("fs");
+        const getPipPath = path.join(__dirname, "get-pip.py");
+        
+        execSync(`curl -sS https://bootstrap.pypa.io/get-pip.py -o "${getPipPath}"`, { stdio: "inherit" });
+        execSync(`python3 "${getPipPath}" --user`, { stdio: "inherit" });
+        fs.unlinkSync(getPipPath);
+        hasPip = true;
+      } catch (curlErr) {
+        console.error("[ensurePythonDeps] Failed to download and install pip:", curlErr.message);
+      }
+    }
+  }
+  
+  // 2. Install dependencies using pip
+  if (hasPip) {
+    try {
+      console.log("[ensurePythonDeps] Installing dependencies from requirements.txt...");
+      // Try installing with --user option
+      execSync("python3 -m pip install --user -r ../requirements.txt", { stdio: "inherit" });
+      console.log("[ensurePythonDeps] Dependencies installed successfully!");
+    } catch (installErr) {
+      console.warn("[ensurePythonDeps] Failed to install dependencies with --user. Retrying without it...");
+      try {
+        execSync("python3 -m pip install -r ../requirements.txt", { stdio: "inherit" });
+        console.log("[ensurePythonDeps] Dependencies installed successfully!");
+      } catch (fallbackErr) {
+        console.error("[ensurePythonDeps] Failed to install dependencies:", fallbackErr.message);
+      }
+    }
+  } else {
+    // Last ditch effort: try calling raw pip3 or pip directly
+    try {
+      console.log("[ensurePythonDeps] Attempting raw pip3 installation...");
+      execSync("pip3 install --user -r ../requirements.txt", { stdio: "inherit" });
+      console.log("[ensurePythonDeps] Dependencies installed successfully!");
+    } catch (rawErr) {
+      console.error("[ensurePythonDeps] All attempts to install Python dependencies failed.");
+    }
+  }
+};
+
 // Connect to MongoDB
 const mongoUri = process.env.MONGODB_URI || "mongodb+srv://prathammishra067_db_user:rtGiwx0Sh1bMmpiM@cluster0.qlgknnj.mongodb.net/?appName=Cluster0";
 mongoose.connect(mongoUri)
@@ -1152,6 +1221,13 @@ Respond with a JSON object that has this exact schema (no markdown block wrapper
 const port = process.env.PORT || 5000;
 const server = app.listen(port, "0.0.0.0", () => {
   console.log(`Server Running On Port ${port}`);
+
+  // Install/Verify Python dependencies dynamically at runtime on Render
+  try {
+    ensurePythonDeps();
+  } catch (err) {
+    console.error("[Backend] Error running ensurePythonDeps:", err.message);
+  }
 
   // Spawn Flask Chatbot Backend automatically in background
   const { spawn } = require("child_process");

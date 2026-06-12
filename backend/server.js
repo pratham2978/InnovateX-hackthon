@@ -25,6 +25,22 @@ const jwt = require("jsonwebtoken");
 const User = require("./models/user");
 const JWT_SECRET = process.env.JWT_SECRET || "synapse_super_secret_auth_key";
 
+const getPythonPath = () => {
+  if (process.platform === "win32") {
+    const localVenv = path.join(__dirname, "venv", "Scripts", "python.exe");
+    const localDotVenv = path.join(__dirname, ".venv", "Scripts", "python.exe");
+    if (fs.existsSync(localVenv)) return localVenv;
+    if (fs.existsSync(localDotVenv)) return localDotVenv;
+    return "python";
+  } else {
+    const renderVenv = path.join(__dirname, "venv", "bin", "python");
+    const renderDotVenv = path.join(__dirname, ".venv", "bin", "python");
+    if (fs.existsSync(renderVenv)) return renderVenv;
+    if (fs.existsSync(renderDotVenv)) return renderDotVenv;
+    return "python3";
+  }
+};
+
 // Connect to MongoDB
 const mongoUri = process.env.MONGODB_URI || "mongodb+srv://prathammishra067_db_user:rtGiwx0Sh1bMmpiM@cluster0.qlgknnj.mongodb.net/?appName=Cluster0";
 mongoose.connect(mongoUri)
@@ -85,8 +101,9 @@ app.post("/upload", upload.single("resume"), (req, res) => {
     }
   }
 
+  const pythonBin = getPythonPath();
   exec(
-    `python python/resume_analyzer.py ${filePath}`,
+    `"${pythonBin}" python/resume_analyzer.py "${filePath}"`,
     async (error, stdout, stderr) => {
       if (error) {
         console.error(error);
@@ -1125,7 +1142,7 @@ const server = app.listen(port, "0.0.0.0", () => {
 
   // Spawn Flask Chatbot Backend automatically in background
   const { spawn } = require("child_process");
-  const pythonCmd = process.platform === "win32" ? "python" : "python3";
+  const pythonCmd = getPythonPath();
   const flaskPath = path.join(__dirname, "chatbot/app.py");
 
   console.log(`[Backend] Spawning Flask Chatbot server: ${pythonCmd} ${flaskPath}`);

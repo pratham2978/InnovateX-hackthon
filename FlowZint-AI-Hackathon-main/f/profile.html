@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNAPSE — My Profile & Dashboard</title>
+    <!-- Tailwind CSS v4 via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&family=Fira+Code:wght@500&display=swap" rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-brand-bg: #0A0A0A;
+            --color-brand-card: #111111;
+            --color-brand-text: #F5F5F5;
+            --color-brand-red: #D90429;
+            --color-brand-red-light: #E63946;
+            --color-brand-orange: #C97B3D;
+            --color-brand-orange-light: #D08B4E;
+            --color-brand-border: #222222;
+            
+            --font-display: 'Plus Jakarta Sans', sans-serif;
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+    </style>
+
+    <style>
+        :root {
+            --accent-color: #C97B3D;
+            --accent-color-rgb: 201, 123, 61;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            color: #F5F5F5;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, .brand-font {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        
+        /* Grid background pattern */
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: -30;
+            background-size: 50px 50px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+        }
+
+        /* Glassmorphism card styling */
+        .glass-card {
+            background: rgba(13, 13, 13, 0.75);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-card:hover {
+            border-color: rgba(201, 123, 61, 0.2);
+            box-shadow: 0 0 30px rgba(201, 123, 61, 0.05);
+        }
+        
+        /* Ambient Glowing Backdrops */
+        .glow-bg {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(130px);
+            opacity: 0.35;
+            transition: opacity 0.8s, transform 0.8s;
+        }
+
+        /* Heatmap cell coloring */
+        .hg-cell {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+        .level-0 { background-color: rgba(255, 255, 255, 0.03); }
+        .level-1 { background-color: rgba(201, 123, 61, 0.2); }
+        .level-2 { background-color: rgba(201, 123, 61, 0.4); }
+        .level-3 { background-color: rgba(201, 123, 61, 0.7); }
+        .level-4 { background-color: rgba(201, 123, 61, 1); }
+    </style>
+</head>
+<body class="relative min-h-screen bg-brand-bg text-brand-text selection:bg-brand-orange selection:text-white" id="app-body">
+
+    <!-- Grid Layout Background -->
+    <div class="grid-overlay"></div>
+
+    <!-- Interactive Neural Network Background Canvas -->
+    <canvas id="canvas-synapse" class="fixed inset-0 w-full h-full -z-20 pointer-events-none opacity-25"></canvas>
+
+    <!-- Ambient Glow Element -->
+    <div id="glow-1" class="glow-bg w-[600px] h-[600px] top-[10%] left-[20%] bg-brand-orange/30"></div>
+
+    <!-- Navigation Header -->
+    <nav class="sticky top-0 z-50 w-full px-6 py-4 border-b border-brand-border bg-brand-bg/60 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3 group cursor-pointer" onclick="window.location.href='index.html'">
+                <span class="text-xl font-bold tracking-wider text-white brand-font">SYNAPSE</span>
+            </div>
+            
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-400">
+                <a href="index.html" class="hover:text-white transition-colors">Home</a>
+                <a href="resume-builder.html" class="hover:text-white transition-colors">Resume Analyzer</a>
+                <a href="interview.html" class="hover:text-white transition-colors">Interview Prep</a>
+                <a href="global-ranking.html" class="hover:text-white transition-colors">Global Ranking</a>
+            </div>
+
+            <div class="flex items-center gap-4" id="nav-auth-container">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+    </nav>
+    <!-- Auth Guard: redirect to login if not authenticated -->
+    <script src="js/auth-guard.js"></script>
+
+
+    <!-- Main Content Grid -->
+    <main class="max-w-6xl mx-auto px-6 py-12 relative z-10 flex flex-col gap-8">
+        <header class="flex justify-between items-center flex-wrap gap-4 border-b border-brand-border pb-6">
+            <div>
+                <h1 class="text-3xl font-extrabold text-white tracking-tight">Student Dashboard</h1>
+                <p class="text-neutral-400 font-light text-xs mt-1">Your placement preparedness and analysis overview</p>
+            </div>
+            <button onclick="handleLogout()" class="bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-500 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer transition-all">
+                <i class="fa-solid fa-power-off mr-1.5"></i> Log Out
+            </button>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Side: Profile Card & Quick Stats -->
+            <div class="flex flex-col gap-6">
+                <!-- User Profile Card -->
+                <div class="glass-card rounded-2xl p-8 flex flex-col items-center text-center">
+                    <div class="w-24 h-24 rounded-full border-4 border-brand-orange/20 bg-brand-orange/5 flex items-center justify-center text-brand-orange text-3xl font-black font-mono mb-4" id="profile-avatar">
+                        U
+                    </div>
+                    <h2 class="text-xl font-bold text-white" id="profile-name">Loading...</h2>
+                    <p class="text-xs text-neutral-400 font-light mt-1" id="profile-email">email@example.com</p>
+                    <div class="mt-4 px-4 py-1.5 bg-brand-orange/10 border border-brand-orange/30 text-brand-orange text-xs font-semibold rounded-full flex items-center gap-1.5">
+                        <i class="fa-solid fa-graduation-cap"></i> placement ready
+                    </div>
+                </div>
+
+                <!-- Streak & Points Widget -->
+                <div class="glass-card rounded-2xl p-6 flex flex-col gap-4">
+                    <h3 class="text-xs font-bold text-white uppercase tracking-wider border-b border-brand-border pb-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-fire text-brand-orange"></i> Activity Streaks
+                    </h3>
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div class="flex flex-col">
+                            <span class="text-2xl font-extrabold text-white font-mono" id="streak-count">1</span>
+                            <span class="text-[9px] text-neutral-500 font-bold uppercase tracking-wider mt-1">CURRENT STREAK</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-2xl font-extrabold text-brand-orange-light font-mono">3 Days</span>
+                            <span class="text-[9px] text-neutral-500 font-bold uppercase tracking-wider mt-1">BEST EVER</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Snapshot Info -->
+                <div class="glass-card rounded-2xl p-6 flex flex-col gap-4">
+                    <h3 class="text-xs font-bold text-white uppercase tracking-wider border-b border-brand-border pb-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-info-circle text-brand-orange"></i> Platform Stats
+                    </h3>
+                    <div class="space-y-3.5 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="text-neutral-400">Mock Sessions Completed</span>
+                            <span class="font-bold text-white">12</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-neutral-400">Average Interview Rating</span>
+                            <span class="font-bold text-brand-orange-light flex items-center gap-1"><i class="fa-solid fa-star"></i> 4.8</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Heatmap & Recent Resume Analyses -->
+            <div class="lg:col-span-2 flex flex-col gap-8">
+                <!-- Summary Blocks Row -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="glass-card rounded-xl p-5 text-center flex flex-col justify-center">
+                        <span class="text-2xl font-extrabold text-white font-mono" id="summary-analyzed">0</span>
+                        <span class="text-[9px] text-neutral-500 font-bold uppercase tracking-wider mt-1.5">Resumes Analyzed</span>
+                    </div>
+                    <div class="glass-card rounded-xl p-5 text-center flex flex-col justify-center">
+                        <span class="text-2xl font-extrabold text-brand-orange-light font-mono" id="summary-avg-score">0%</span>
+                        <span class="text-[9px] text-neutral-500 font-bold uppercase tracking-wider mt-1.5">Average Score</span>
+                    </div>
+                    <div class="glass-card rounded-xl p-5 text-center flex flex-col justify-center">
+                        <span class="text-2xl font-extrabold text-green-400 font-mono" id="summary-best-score">0%</span>
+                        <span class="text-[9px] text-neutral-500 font-bold uppercase tracking-wider mt-1.5">Highest Score</span>
+                    </div>
+                    <div class="glass-card rounded-xl p-5 text-center flex flex-col justify-center">
+                        <span class="text-2xl font-extrabold text-brand-orange font-mono" id="summary-skills">0</span>
+                        <span class="text-[9px] text-neutral-500 font-bold uppercase tracking-wider mt-1.5">Total Skills Checked</span>
+                    </div>
+                </div>
+
+                <!-- Heatmap grid -->
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-xs font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                        <i class="fa-solid fa-chart-area text-brand-orange"></i> Activity Tracker <span class="text-[10px] text-neutral-500 font-light lowercase">(last 365 days)</span>
+                    </h3>
+                    <div class="flex gap-1 overflow-x-auto pb-4" id="heatmap-container">
+                        <!-- Heatmap columns injected by JS -->
+                    </div>
+                    <div class="flex items-center justify-between text-[10px] text-neutral-500 font-light mt-3 border-t border-brand-border/60 pt-3">
+                        <span>Interactive roadmap interactions and resume parses logged.</span>
+                        <div class="flex items-center gap-1">
+                            <span>Less</span>
+                            <div class="hg-cell level-0"></div>
+                            <div class="hg-cell level-1"></div>
+                            <div class="hg-cell level-2"></div>
+                            <div class="hg-cell level-3"></div>
+                            <div class="hg-cell level-4"></div>
+                            <span>More</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Resumes History -->
+                <div class="glass-card rounded-2xl overflow-hidden">
+                    <h3 class="text-xs font-bold text-white uppercase tracking-wider px-6 pt-6 pb-4 flex items-center gap-1.5">
+                        <i class="fa-solid fa-clock-rotate-left text-brand-orange"></i> Recent Resume Uploads
+                    </h3>
+                    <div class="overflow-x-auto w-full">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="border-b border-brand-border bg-black/20 text-neutral-400">
+                                    <th class="px-6 py-4 font-semibold">FILENAME</th>
+                                    <th class="px-6 py-4 font-semibold text-center">ATS SCORE</th>
+                                    <th class="px-6 py-4 font-semibold">PREDICTED ROLE</th>
+                                    <th class="px-6 py-4 font-semibold text-center">SKILLS</th>
+                                    <th class="px-6 py-4 font-semibold text-right">WHEN</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resume-table-body" class="divide-y divide-brand-border/30">
+                                <tr>
+                                    <td colspan="5" class="px-6 py-8 text-center text-neutral-500 italic">No resumes analyzed yet. Get started in the Workspace!</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const backendUrl = (() => {
+            const { protocol, hostname, port, origin } = window.location;
+            const isLocal = protocol === 'file:' || hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]' || hostname.startsWith('192.168.') || hostname.startsWith('10.') || hostname.startsWith('172.');
+            return isLocal ? (port === '5000' ? origin : `http://${hostname === 'localhost' || hostname === '[::1]' || protocol === 'file:' ? '127.0.0.1' : hostname}:5000`) : origin;
+        })();
+
+        function handleLogout() {
+            localStorage.removeItem("synapse_token");
+            localStorage.removeItem("synapse_user");
+            window.location.href = "index.html";
+        }
+
+        async function syncProfile() {
+            const token = localStorage.getItem("synapse_token");
+            const userStr = localStorage.getItem("synapse_user");
+            
+            if (!token || !userStr) {
+                // If not logged in, redirect to login/register flow
+                window.location.href = "auth.html";
+                return;
+            }
+
+            try {
+                const user = JSON.parse(userStr);
+                
+                // Populate static details
+                document.getElementById("profile-name").textContent = user.name || "User Profile";
+                document.getElementById("profile-email").textContent = user.email || "email@example.com";
+                
+                const initials = user.name ? user.name.split(" ").map(n => n.charAt(0)).join("").toUpperCase().slice(0, 2) : "U";
+                document.getElementById("profile-avatar").textContent = initials;
+
+                // Sync Navbar
+                const navContainer = document.getElementById("nav-auth-container");
+                if (navContainer) {
+                    navContainer.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-brand-orange/20 border border-brand-orange/40 flex items-center justify-center text-brand-orange text-xs font-bold font-mono">
+                                ${initials}
+                            </div>
+                            <span class="text-xs text-neutral-300 font-semibold hidden sm:inline">${user.name || 'User'}</span>
+                            <a href="index.html" class="text-xs font-semibold px-4 py-2 border border-brand-border rounded-lg text-neutral-300 hover:text-white hover:border-neutral-500 transition-all">
+                                <i class="fa-solid fa-house mr-1"></i> Home
+                            </a>
+                        </div>
+                    `;
+                }
+
+                // Load User Resume History from Backend
+                const response = await fetch(`${backendUrl}/api/resumes/history`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+
+                if (data.success && data.history && data.history.length > 0) {
+                    // Populate counts
+                    const count = data.history.length;
+                    document.getElementById("summary-analyzed").textContent = count;
+
+                    let totalScore = 0;
+                    let bestScore = 0;
+                    let totalSkills = 0;
+                    
+                    const tbody = document.getElementById("resume-table-body");
+                    tbody.innerHTML = "";
+
+                    data.history.forEach(item => {
+                        totalScore += item.score;
+                        if (item.score > bestScore) bestScore = item.score;
+                        totalSkills += item.skills ? item.skills.length : 0;
+
+                        const dateStr = new Date(item.analyzedAt).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+
+                        const tr = document.createElement("tr");
+                        tr.className = "hover:bg-white/2 cursor-pointer transition-all";
+                        tr.onclick = () => {
+                            // Redirect to analyzer page with parameters to view details
+                            window.location.href = `resume-builder.html?historyId=${item._id}`;
+                        };
+
+                        const scoreVal = Math.round(item.score);
+                        const scoreColor = scoreVal >= 80 ? 'text-green-400' : scoreVal >= 50 ? 'text-amber-500' : 'text-red-500';
+
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 font-semibold text-white truncate max-w-[200px]" title="${item.fileName}">
+                                <i class="fa-solid fa-file-pdf text-brand-orange mr-2"></i> ${item.fileName}
+                            </td>
+                            <td class="px-6 py-4 text-center font-bold ${scoreColor} font-mono">${scoreVal}%</td>
+                            <td class="px-6 py-4 text-neutral-300 font-light truncate max-w-[150px]">${item.role}</td>
+                            <td class="px-6 py-4 text-center text-neutral-400 font-mono">${item.skills ? item.skills.length : 0} tags</td>
+                            <td class="px-6 py-4 text-right text-neutral-500 font-light">${dateStr}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    document.getElementById("summary-avg-score").textContent = Math.round(totalScore / count) + "%";
+                    document.getElementById("summary-best-score").textContent = Math.round(bestScore) + "%";
+                    document.getElementById("summary-skills").textContent = totalSkills;
+
+                    // Set streak
+                    document.getElementById("streak-count").textContent = count >= 3 ? "3 Days" : `${count} Days`;
+                }
+
+                // Render GitHub style activity heatmap
+                renderHeatmap(data.history || []);
+
+            } catch (err) {
+                console.error("Profile sync error:", err);
+            }
+        }
+
+        function renderHeatmap(history) {
+            const container = document.getElementById("heatmap-container");
+            if (!container) return;
+
+            const weeks = 52;
+            const daysPerWeek = 7;
+            const today = new Date();
+            const startDay = new Date();
+            startDay.setDate(today.getDate() - (weeks * daysPerWeek - 1));
+
+            // Map dates
+            const dateMap = {};
+            history.forEach(item => {
+                const dateKey = new Date(item.analyzedAt).toISOString().split('T')[0];
+                dateMap[dateKey] = (dateMap[dateKey] || 0) + 1;
+            });
+
+            container.innerHTML = "";
+            let currentDayIdx = 0;
+
+            for (let w = 0; w < weeks; w++) {
+                const col = document.createElement("div");
+                col.className = "flex flex-col gap-1";
+
+                for (let d = 0; d < daysPerWeek; d++) {
+                    const cell = document.createElement("div");
+                    const cellDate = new Date(startDay);
+                    cellDate.setDate(cellDate.getDate() + currentDayIdx);
+                    const cellDateStr = cellDate.toISOString().split('T')[0];
+
+                    const count = dateMap[cellDateStr] || 0;
+                    let level = 0;
+                    if (count > 0) {
+                        level = Math.min(count, 4);
+                    }
+                    if (cellDate > today) {
+                        level = 0;
+                    }
+
+                    cell.className = `w-3.5 h-3.5 rounded-[2px] transition-colors duration-200 level-${level}`;
+                    cell.setAttribute("title", `${count} resume analyses logged on ${cellDateStr}`);
+                    col.appendChild(cell);
+                    currentDayIdx++;
+                }
+                container.appendChild(col);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', syncProfile);
+
+        // ==========================================
+        // DYNAMIC NEURAL CANVAS BACKGROUND (SYNAPSE)
+        // ==========================================
+        const canvas = document.getElementById('canvas-synapse');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 65;
+        let mouse = { x: null, y: null, active: false };
+        let glowX = width / 2;
+        let glowY = height / 2;
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            mouse.active = true;
+        });
+
+        window.addEventListener('mouseleave', () => {
+            mouse.active = false;
+        });
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.55;
+                this.vy = (Math.random() - 0.5) * 0.55;
+                this.radius = Math.random() * 2.2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (mouse.active) {
+                    const dx = mouse.x - this.x;
+                    const dy = mouse.y - this.y;
+                    const distance = Math.hypot(dx, dy);
+                    if (distance < 170) {
+                        const force = (170 - distance) / 170;
+                        const angle = Math.atan2(dy, dx);
+                        this.x -= Math.cos(angle) * force * 2.0;
+                        this.y -= Math.sin(angle) * force * 2.0;
+                    }
+                }
+
+                if (this.x < 0 || this.x > width) this.vx = -this.vx;
+                if (this.y < 0 || this.y > height) this.vy = -this.vy;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 3.5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(201, 123, 61, 0.25)`;
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `#FFFFFF`;
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            const glow1 = document.getElementById('glow-1');
+            if (glow1) {
+                let targetX = mouse.active ? mouse.x : width / 2;
+                let targetY = mouse.active ? mouse.y : height / 2;
+                glowX += (targetX - glowX) * 0.04;
+                glowY += (targetY - glowY) * 0.04;
+                glow1.style.left = `${glowX - 300}px`;
+                glow1.style.top = `${glowY - 300}px`;
+            }
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dist = Math.hypot(particles[i].x - particles[j].x, particles[i].y - particles[j].y);
+                    if (dist < 125) {
+                        const alpha = (1 - dist / 125) * 0.55;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(201, 123, 61, ${alpha * 0.35})`;
+                        ctx.lineWidth = 3.5;
+                        ctx.stroke();
+
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(201, 123, 61, ${alpha})`;
+                        ctx.lineWidth = 1.0;
+                        ctx.stroke();
+                    }
+                }
+
+                if (mouse.active) {
+                    const distToMouse = Math.hypot(particles[i].x - mouse.x, particles[i].y - mouse.y);
+                    if (distToMouse < 170) {
+                        const alpha = (1 - distToMouse / 170) * 0.75;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.strokeStyle = `rgba(201, 123, 61, ${alpha * 0.35})`;
+                        ctx.lineWidth = 5.0;
+                        ctx.stroke();
+
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.strokeStyle = `rgba(201, 123, 61, ${alpha})`;
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>

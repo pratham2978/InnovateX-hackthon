@@ -1,0 +1,6 @@
+flask
+requests
+python-dotenv
+pdfplumber
+joblib
+scikit-learn

@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNAPSE — Peer-to-Peer Mock Interviews</title>
+    <!-- Tailwind CSS v4 via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;850&family=Plus+Jakarta+Sans:wght@700;800&family=Fira+Code:wght@500&display=swap" rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-brand-bg: #0A0A0A;
+            --color-brand-card: #111111;
+            --color-brand-text: #F5F5F5;
+            --color-brand-red: #D90429;
+            --color-brand-red-light: #E63946;
+            --color-brand-orange: #C97B3D;
+            --color-brand-orange-light: #D08B4E;
+            --color-brand-border: #222222;
+            
+            --font-display: 'Plus Jakarta Sans', sans-serif;
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+    </style>
+
+    <style>
+        :root {
+            --accent-color: #C97B3D;
+            --accent-color-rgb: 201, 123, 61;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            color: #F5F5F5;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, .brand-font {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        
+        /* Grid background pattern */
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: -30;
+            background-size: 50px 50px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+        }
+
+        /* Glassmorphism card styling */
+        .glass-card {
+            background: rgba(13, 13, 13, 0.75);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-card:hover {
+            border-color: rgba(201, 123, 61, 0.2);
+            box-shadow: 0 0 30px rgba(201, 123, 61, 0.05);
+        }
+        
+        /* Ambient Glowing Backdrops */
+        .glow-bg {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(130px);
+            opacity: 0.35;
+            transition: opacity 0.8s, transform 0.8s;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); transform: scale(0.98); }
+            50% { box-shadow: 0 0 40px rgba(16, 185, 129, 0.6); transform: scale(1.02); }
+            100% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); transform: scale(0.98); }
+        }
+        
+        .pulse-bot {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen bg-brand-bg text-brand-text selection:bg-brand-orange selection:text-white" id="app-body">
+
+    <!-- Grid Layout Background -->
+    <div class="grid-overlay"></div>
+
+    <!-- Interactive Neural Network Background Canvas -->
+    <canvas id="canvas-synapse" class="fixed inset-0 w-full h-full -z-20 pointer-events-none opacity-25"></canvas>
+
+    <!-- Ambient Glow Element -->
+    <div id="glow-1" class="glow-bg w-[600px] h-[600px] top-[10%] left-[20%] bg-brand-orange/30"></div>
+
+    <!-- Navigation Header -->
+    <nav class="sticky top-0 z-50 w-full px-6 py-4 border-b border-brand-border bg-brand-bg/60 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3 group cursor-pointer" onclick="window.location.href='index.html'">
+                <span class="text-xl font-bold tracking-wider text-white brand-font">SYNAPSE</span>
+            </div>
+            
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-400">
+                <a href="index.html" class="hover:text-white transition-colors">Home</a>
+                <a href="features.html" class="hover:text-white transition-colors">Features</a>
+                <a href="global-ranking.html" class="hover:text-white transition-colors">Global Ranking</a>
+            </div>
+
+            <div class="flex items-center gap-4" id="nav-auth-container">
+                <button onclick="window.location.href='auth.html'" class="text-xs font-semibold px-4 py-2 border border-brand-border rounded-lg text-neutral-300 hover:text-white hover:border-neutral-500 transition-all cursor-pointer">
+                    Log In
+                </button>
+                <a href="interview.html" class="text-xs font-semibold px-4 py-2 border border-brand-border rounded-lg text-neutral-300 hover:text-white hover:border-neutral-500 transition-all">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Back to Interview Prep
+                </a>
+            </div>
+        </div>
+    </nav>
+    <!-- Auth Guard: redirect to login if not authenticated -->
+    <script src="js/auth-guard.js"></script>
+
+
+    <!-- Main Header -->
+    <header class="py-16 px-6 max-w-6xl mx-auto text-center relative z-10">
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-none">
+            Peer-to-Peer <span class="bg-gradient-to-r from-brand-orange via-brand-red to-purple-500 bg-clip-text text-transparent">Mock Interviews</span>
+        </h1>
+        <p class="text-neutral-400 font-light text-sm md:text-base max-w-2xl mx-auto leading-relaxed mt-4">
+            Practice live coding, system design, and communication skills with thousands of other candidates via real-time video pairing.
+        </p>
+    </header>
+
+    <!-- AI Interview Modal -->
+    <div id="ai-modal" class="fixed inset-0 bg-black/90 z-50 hidden justify-center items-center backdrop-blur-md p-6">
+        <div class="bg-[#111] border border-[#10b981]/20 p-8 rounded-2xl w-full max-w-2xl shadow-2xl">
+            <!-- Header -->
+            <div class="flex items-center gap-4 mb-6">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-[#10b981] to-[#047857] flex items-center justify-center text-xl text-white pulse-bot">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div>
+                    <h3 class="text-white font-bold">AI Interviewer <span class="text-[9px] bg-[#10b981] text-black px-2 py-0.5 rounded-full font-bold ml-1.5 align-middle">LIVE</span></h3>
+                    <div id="ai-topic-tag" class="text-xs text-[#10b981] font-semibold mt-1">Topic: Data Structures & Algorithms — Medium</div>
+                </div>
+                <button onclick="endAiInterview()" class="ml-auto bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-500 px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-all">
+                    Exit
+                </button>
+            </div>
+
+            <!-- Question Box -->
+            <div class="bg-[#10b981]/5 border border-[#10b981]/10 rounded-xl p-5 mb-6 min-h-[90px]">
+                <div class="text-[10px] text-[#10b981] font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <i class="fa-solid fa-robot"></i> AI Interviewer
+                </div>
+                <p id="ai-question-text" class="text-neutral-200 text-sm leading-relaxed">Loading question...</p>
+            </div>
+
+            <!-- User Answer Box -->
+            <div class="mb-6">
+                <div class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <i class="fa-solid fa-user"></i> Your Answer
+                </div>
+                <textarea id="ai-user-answer" rows="4" placeholder="Type your answer here... (Be thorough! Mention examples, time-complexity, trade-offs etc.)" 
+                    class="w-full bg-black/40 border border-brand-border rounded-xl p-4 text-white focus:outline-none focus:border-[#10b981]/50 text-sm font-sans resize-none transition-all duration-300"></textarea>
+            </div>
+
+            <!-- AI Feedback Box -->
+            <div id="ai-feedback-box" class="hidden bg-brand-orange/5 border border-brand-orange/15 rounded-xl p-4 mb-6">
+                <div class="text-[10px] text-brand-orange font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                    <i class="fa-solid fa-lightbulb"></i> AI Feedback
+                </div>
+                <p id="ai-feedback-text" class="text-amber-100 text-xs leading-relaxed"></p>
+            </div>
+
+            <!-- Progress & Controls -->
+            <div class="flex items-center gap-4 flex-wrap">
+                <div class="text-xs text-neutral-500 flex-1">Question <span id="q-current" class="font-bold text-white">1</span> of <span id="q-total" class="font-bold text-white">5</span></div>
+                <button id="btn-submit-answer" onclick="submitAnswer()" class="bg-[#10b981]/15 hover:bg-[#10b981]/20 border border-[#10b981]/30 text-[#10b981] px-5 py-2 rounded-xl text-sm font-bold cursor-pointer transition-all">
+                    <i class="fa-solid fa-paper-plane mr-1.5"></i> Submit Answer
+                </button>
+                <button id="btn-next-q" onclick="nextAiQuestion()" class="hidden bg-brand-orange hover:bg-brand-orange-light text-white px-5 py-2 rounded-xl text-sm font-bold cursor-pointer transition-all">
+                    Next Question <i class="fa-solid fa-arrow-right ml-1.5"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Container -->
+    <main class="max-w-6xl mx-auto px-6 pb-24 grid grid-cols-1 lg:grid-cols-3 gap-8 relative z-10">
+        
+        <!-- Left Side: Match & Upcoming -->
+        <div class="lg:col-span-2 flex flex-col gap-8">
+            
+            <!-- Quick Match -->
+            <div class="glass-card rounded-2xl p-8">
+                <h2 class="text-lg font-bold text-white mb-6 flex items-center gap-2.5">
+                    <i class="fa-solid fa-bolt text-brand-orange"></i> Start an Interview Now
+                </h2>
+                <div class="flex flex-col gap-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <select class="bg-black/40 border border-brand-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-brand-orange" id="topic-select">
+                            <option value="behavioral" selected>Behavioral & Profile</option>
+                            <option value="dsa">Data Structures & Algorithms</option>
+                            <option value="system-design">System Design (HLD/LLD)</option>
+                            <option value="frontend">Frontend & React</option>
+                            <option value="backend">Backend & Databases</option>
+                        </select>
+                        <select class="bg-black/40 border border-brand-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-brand-orange" id="difficulty-select">
+                            <option value="easy">Easy (Intern Level)</option>
+                            <option value="medium" selected>Medium (New Grad)</option>
+                            <option value="hard">Hard (Senior Level)</option>
+                        </select>
+                    </div>
+                    <button class="w-full bg-gradient-to-r from-brand-orange to-brand-red hover:from-brand-orange-light hover:to-brand-red-light text-white font-bold py-4 px-6 rounded-xl transition-all shadow-xl shadow-brand-red/10 hover:shadow-brand-red/20 transform hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2" onclick="findMatch()">
+                        <i class="fa-solid fa-satellite-dish"></i> Find a Match (ETA: 1m 20s)
+                    </button>
+                    <p id="match-status" class="text-center text-sm font-semibold text-brand-orange-light hidden">
+                        <i class="fa-solid fa-circle-notch fa-spin mr-1.5"></i> Searching for an available peer...
+                    </p>
+                </div>
+            </div>
+
+            <!-- Scheduled Interviews -->
+            <div class="glass-card rounded-2xl p-8">
+                <h2 class="text-lg font-bold text-white mb-6 flex items-center gap-2.5">
+                    <i class="fa-regular fa-calendar-check text-brand-orange"></i> Scheduled Interviews
+                </h2>
+                <div class="flex flex-col gap-4">
+                    <!-- Item 1 -->
+                    <div class="flex items-center justify-between gap-4 p-4 rounded-xl bg-black/30 border border-brand-border">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-brand-orange text-black font-bold flex items-center justify-center text-sm">
+                                S
+                            </div>
+                            <div>
+                                <h4 class="text-white text-sm font-bold">Sarah J.</h4>
+                                <p class="text-xs text-neutral-400 mt-1 flex items-center gap-1.5"><i class="fa-regular fa-clock"></i> Today at 8:00 PM • DSA Medium</p>
+                            </div>
+                        </div>
+                        <a href="#" class="px-4 py-2 border border-[#4ade80] bg-[#4ade80]/10 hover:bg-[#4ade80] hover:text-black rounded-lg text-xs font-bold text-[#4ade80] transition-all" onclick="alert('Joining Interview Room! Microphone and Camera enabled.')">
+                            Join Room
+                        </a>
+                    </div>
+                    
+                    <!-- Item 2 -->
+                    <div class="flex items-center justify-between gap-4 p-4 rounded-xl bg-black/30 border border-brand-border">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-blue-500 text-white font-bold flex items-center justify-center text-sm">
+                                M
+                            </div>
+                            <div>
+                                <h4 class="text-white text-sm font-bold">Michael C.</h4>
+                                <p class="text-xs text-neutral-400 mt-1 flex items-center gap-1.5"><i class="fa-regular fa-clock"></i> Tomorrow at 2:30 PM • System Design</p>
+                            </div>
+                        </div>
+                        <span class="px-4 py-2 border border-transparent bg-brand-card/60 text-neutral-500 rounded-lg text-xs font-bold cursor-not-allowed" title="Room opens 5 minutes before">
+                            Starts later
+                        </span>
+                    </div>
+                </div>
+                <button class="w-full mt-6 py-3 border border-dashed border-neutral-800 hover:border-brand-orange hover:bg-brand-orange/5 text-neutral-400 hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-plus"></i> Schedule for Later
+                </button>
+            </div>
+            
+        </div>
+
+        <!-- Right Side: AI and Stats -->
+        <div class="flex flex-col gap-8">
+            
+            <!-- AI Bot Widget -->
+            <div class="glass-card rounded-2xl p-8 border-brand-orange/20 bg-gradient-to-br from-[#10b981]/5 to-transparent text-center">
+                <i class="fa-solid fa-robot text-5xl text-[#10b981] mb-4 inline-block filter drop-shadow-[0_0_15px_rgba(16,185,129,0.35)]"></i>
+                <h3 class="text-lg font-bold text-white mb-2">
+                    AI Interviewer <span class="text-[9px] bg-[#10b981] text-black px-2 py-0.5 rounded-full font-bold ml-1.5 align-middle">BETA</span>
+                </h3>
+                <p class="text-xs text-neutral-400 leading-relaxed mb-6">
+                    Not ready for a AI Interview? practice answering behavioral & technical questions with our voice-enabled AI bot.
+                </p>
+                <button class="w-full bg-[#10b981]/10 hover:bg-[#10b981]/20 border border-[#10b981]/40 text-[#10b981] font-bold py-3.5 px-6 rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-2" onclick="startAiInterview()">
+                    <i class="fa-solid fa-microphone"></i> Start AI Session
+                </button>
+            </div>
+
+            <!-- Stats -->
+            <div class="glass-card rounded-2xl p-8">
+                <h3 class="text-white font-bold text-sm border-b border-brand-border pb-3 mb-5 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-brand-orange"></i> Your Statistics
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-neutral-400">Interviews Completed</span>
+                        <span class="text-white font-mono font-bold">12</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-neutral-400">Average Rating</span>
+                        <span class="text-brand-orange font-bold flex items-center gap-1"><i class="fa-solid fa-star"></i> 4.8</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-neutral-400">Current Streak</span>
+                        <span class="text-brand-orange font-bold flex items-center gap-1"><i class="fa-solid fa-fire"></i> 3 Days</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        function findMatch() {
+            const btn = document.querySelector('.w-full.bg-gradient-to-r');
+            const status = document.getElementById('match-status');
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Connecting to matchmaking servers...';
+            btn.style.opacity = '0.8';
+            btn.style.pointerEvents = 'none';
+            status.classList.remove('hidden');
+            setTimeout(() => {
+                status.innerHTML = '<i class="fa-solid fa-check" style="color:#4ade80;"></i> Match found! Creating secure video room...';
+                status.style.color = '#4ade80';
+                setTimeout(() => {
+                    window.location.href = "video-room.html";
+                    btn.innerHTML = '<i class="fa-solid fa-satellite-dish"></i> Find a Match (ETA: 1m 20s)';
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'all';
+                    status.classList.add('hidden');
+                    status.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Searching...';
+                    status.style.color = '#C97B3D';
+                }, 1500);
+            }, 2500);
+        }
+
+        // AI questions bank
+        const AI_QUESTION_BANK = {
+            'behavioral': {
+                'easy': [
+                    { q: "Tell me about yourself, your educational background, and your key areas of interest in software engineering.", feedback: "Highlight your academic qualifications (degree, university), why you chose software engineering, and the programming areas or stacks you enjoy working on." },
+                    { q: "What motivated you to pursue your current course of study or degree, and how has it prepared you for a technical career?", feedback: "Discuss key courses, problem-solving skills learned, hands-on labs, or any personal projects you built during your education." },
+                    { q: "Describe a project you worked on during your studies. What technologies did you use, and what was your individual contribution?", feedback: "Detail the project scope, language/framework choice, your specific role in building features, and how you handled bugs or issues." }
+                ],
+                'medium': [
+                    { q: "Introduce yourself, talk about your education, and share a time you had to adapt to a new framework or technology quickly for a class or project.", feedback: "Start with a brief intro, then focus on your learning strategy: reading documentation, building small prototypes, and seeking help when stuck." },
+                    { q: "Could you walk me through your education and explain how you prioritize tasks and manage deadlines when handling multiple projects?", feedback: "Briefly explain your academic background, then discuss practical techniques: using todo lists, project management tools, calendar scheduling, or dividing larger features into smaller tasks." }
+                ],
+                'hard': [
+                    { q: "Summarize your educational journey, technical achievements, and discuss how you manage team dynamics or resolve disagreements in collaborative group work.", feedback: "Establish your profile and education, then explain conflict resolution: listening to the peer's point of view, using data-driven arguments, and finding compromises to achieve project success." }
+                ]
+            },
+            'dsa': {
+                'easy': [
+                    { q: "What is an Array and how is it different from a Linked List?", feedback: "A strong answer mentions: contiguous memory (Array) vs nodes with pointers (Linked List), O(1) random access for arrays vs O(n) for linked lists, and dynamic sizing advantages." },
+                    { q: "What is a Stack? Give a real-world example of where it is used.", feedback: "LIFO principle, call-stack in programming, undo/redo in editors, or browser history." },
+                    { q: "Explain the concept of a Queue and mention two of its real-world applications.", feedback: "FIFO. Applications include: print spoolers, CPU task scheduling, BFS traversal." }
+                ],
+                'medium': [
+                    { q: "Explain the Two Sum problem. What is the optimal approach and what is its time complexity?", feedback: "Brute force is O(n²). Optimal is to use a HashMap storing complement values, giving O(n) time with O(n) space." },
+                    { q: "What is a Binary Search Tree? What are its key properties and average time complexities?", feedback: "BST: left child < parent < right child. Average: O(log n) for all operations. Worst case is O(n)." }
+                ],
+                'hard': [
+                    { q: "Design an LRU Cache. What data structures would you use and why?", feedback: "Use a HashMap + Doubly Linked List. HashMap gives O(1) lookup, DLL maintains insertion order." }
+                ]
+            },
+            'system-design': {
+                'easy': [
+                    { q: "What is the difference between horizontal and vertical scaling?", feedback: "Vertical = add more power to one machine. Horizontal = add more machines. Horizontal scaling is preferred for distributed systems." }
+                ]
+            }
+        };
+
+        const TOPIC_LABELS = { behavioral: 'Behavioral & Profile', dsa: 'Data Structures & Algorithms', 'system-design': 'System Design', frontend: 'Frontend & React', backend: 'Backend & Databases' };
+        const DIFF_LABELS  = { easy: 'Intern Level', medium: 'New Grad', hard: 'Senior Level' };
+
+        let currentAiQuestions = [];
+        let currentQIndex = 0;
+
+        function loadQuestionsFromDropdowns() {
+            const topic = document.getElementById('topic-select').value;
+            const diff  = document.getElementById('difficulty-select').value;
+            const bank  = AI_QUESTION_BANK[topic] || AI_QUESTION_BANK['dsa'];
+            const list = bank[diff] || bank['easy'] || Object.values(bank)[0];
+            currentAiQuestions = list.slice();
+            currentAiQuestions.sort(() => Math.random() - 0.5);
+            currentQIndex = 0;
+            const tag = (TOPIC_LABELS[topic] || topic) + ' — ' + (DIFF_LABELS[diff] || diff);
+            document.getElementById('ai-topic-tag').innerText = 'Topic: ' + tag;
+        }
+
+        document.getElementById('topic-select').addEventListener('change', loadQuestionsFromDropdowns);
+        document.getElementById('difficulty-select').addEventListener('change', loadQuestionsFromDropdowns);
+
+        // Load query parameters if available to pre-select topic
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const topicParam = params.get('topic');
+            if (topicParam) {
+                const topicSelect = document.getElementById('topic-select');
+                if (topicSelect && Array.from(topicSelect.options).some(opt => opt.value === topicParam)) {
+                    topicSelect.value = topicParam;
+                }
+            }
+            loadQuestionsFromDropdowns();
+        });
+
+        function startAiInterview() {
+            loadQuestionsFromDropdowns();
+            document.getElementById('ai-modal').classList.remove('hidden');
+            document.getElementById('ai-modal').classList.add('flex');
+            document.getElementById('ai-feedback-box').classList.add('hidden');
+            document.getElementById('btn-next-q').classList.add('hidden');
+            document.getElementById('btn-submit-answer').classList.remove('hidden');
+            document.getElementById('ai-user-answer').value = '';
+            renderCurrentQuestion();
+        }
+
+        function renderCurrentQuestion() {
+            const total = currentAiQuestions.length;
+            const item  = currentAiQuestions[currentQIndex];
+            document.getElementById('ai-question-text').innerText = item ? item.q : "No questions available.";
+            document.getElementById('q-current').innerText = currentQIndex + 1;
+            document.getElementById('q-total').innerText   = total;
+            document.getElementById('ai-feedback-box').classList.add('hidden');
+            document.getElementById('ai-user-answer').value = '';
+            document.getElementById('btn-next-q').classList.add('hidden');
+            document.getElementById('btn-submit-answer').classList.remove('hidden');
+        }
+
+        function submitAnswer() {
+            const answer = document.getElementById('ai-user-answer').value.trim();
+            if (!answer) {
+                document.getElementById('ai-user-answer').style.borderColor = '#ef4444';
+                setTimeout(() => document.getElementById('ai-user-answer').style.borderColor = 'rgba(255,255,255,0.06)', 1500);
+                return;
+            }
+            const fb = currentAiQuestions[currentQIndex] ? currentAiQuestions[currentQIndex].feedback : "Good job!";
+            document.getElementById('ai-feedback-text').innerText = fb;
+            document.getElementById('ai-feedback-box').classList.remove('hidden');
+            document.getElementById('btn-submit-answer').classList.add('hidden');
+            document.getElementById('btn-next-q').classList.remove('hidden');
+            if (currentQIndex >= currentAiQuestions.length - 1) {
+                document.getElementById('btn-next-q').classList.add('hidden');
+                document.getElementById('ai-question-text').innerText = '🎉 Interview complete! Great effort. Review the feedback above and keep practicing!';
+            }
+        }
+
+        function nextAiQuestion() {
+            currentQIndex++;
+            if (currentQIndex < currentAiQuestions.length) renderCurrentQuestion();
+        }
+
+        function endAiInterview() {
+            document.getElementById('ai-modal').classList.add('hidden');
+            document.getElementById('ai-modal').classList.remove('flex');
+        }
+
+        // ==========================================
+        // DYNAMIC NEURAL CANVAS BACKGROUND (SYNAPSE)
+        // ==========================================
+        const canvas = document.getElementById('canvas-synapse');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 65;
+        let mouse = { x: null, y: null, active: false };
+        let glowX = width / 2;
+        let glowY = height / 2;
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            mouse.active = true;
+        });
+
+        window.addEventListener('mouseleave', () => {
+            mouse.active = false;
+        });
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.55;
+                this.vy = (Math.random() - 0.5) * 0.55;
+                this.radius = Math.random() * 2.2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (mouse.active) {
+                    const dx = mouse.x - this.x;
+                    const dy = mouse.y - this.y;
+                    const distance = Math.hypot(dx, dy);
+                    if (distance < 170) {
+                        const force = (170 - distance) / 170;
+                        const angle = Math.atan2(dy, dx);
+                        this.x -= Math.cos(angle) * force * 2.0;
+                        this.y -= Math.sin(angle) * force * 2.0;
+                    }
+                }
+
+                if (this.x < 0 || this.x > width) this.vx = -this.vx;
+                if (this.y < 0 || this.y > height) this.vy = -this.vy;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 3.5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(201, 123, 61, 0.28)`; // Orange theme glow
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `#FFFFFF`;
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            const glow1 = document.getElementById('glow-1');
+            if (glow1) {
+                let targetX = mouse.active ? mouse.x : width / 2;
+                let targetY = mouse.active ? mouse.y : height / 2;
+                glowX += (targetX - glowX) * 0.04;
+                glowY += (targetY - glowY) * 0.04;
+                glow1.style.left = `${glowX - 300}px`;
+                glow1.style.top = `${glowY - 300}px`;
+            }
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dist = Math.hypot(particles[i].x - particles[j].x, particles[i].y - particles[j].y);
+                    if (dist < 125) {
+                        const alpha = (1 - dist / 125) * 0.55;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(201, 123, 61, ${alpha * 0.35})`;
+                        ctx.lineWidth = 3.5;
+                        ctx.stroke();
+
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(201, 123, 61, ${alpha})`;
+                        ctx.lineWidth = 1.0;
+                        ctx.stroke();
+                    }
+                }
+
+                if (mouse.active) {
+                    const distToMouse = Math.hypot(particles[i].x - mouse.x, particles[i].y - mouse.y);
+                    if (distToMouse < 170) {
+                        const alpha = (1 - distToMouse / 170) * 0.75;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.strokeStyle = `rgba(201, 123, 61, ${alpha * 0.35})`;
+                        ctx.lineWidth = 5.0;
+                        ctx.stroke();
+
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.strokeStyle = `rgba(201, 123, 61, ${alpha})`;
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // Sync Navbar Auth State
+        function syncNavbarAuth() {
+            const token = localStorage.getItem("synapse_token");
+            const userStr = localStorage.getItem("synapse_user");
+            const container = document.getElementById("nav-auth-container");
+            
+            if (token && userStr && container) {
+                try {
+                    const user = JSON.parse(userStr);
+                    const initials = user.name ? user.name.split(" ").map(n => n.charAt(0)).join("").toUpperCase().slice(0, 2) : "U";
+                    container.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <div onclick="window.location.href='profile.html'" class="w-8 h-8 rounded-full bg-brand-orange/20 border border-brand-orange/40 hover:border-brand-orange hover:bg-brand-orange/35 flex items-center justify-center text-brand-orange text-xs font-bold font-mono cursor-pointer transition-all" title="View Profile">
+                                ${initials}
+                            </div>
+                            <span onclick="window.location.href='profile.html'" class="text-xs text-neutral-300 hover:text-white font-semibold hidden sm:inline cursor-pointer transition-all" title="View Profile">${user.name || 'User'}</span>
+                            <button onclick="handleLogout()" class="text-xs font-semibold px-3 py-1.5 border border-brand-border rounded-lg text-neutral-400 hover:text-white hover:border-neutral-500 transition-all cursor-pointer">
+                                Log Out
+                            </button>
+                        </div>
+                        <a href="interview.html" class="text-xs font-semibold px-4 py-2 border border-brand-border rounded-lg text-neutral-300 hover:text-white hover:border-neutral-500 transition-all">
+                            <i class="fa-solid fa-arrow-left mr-1"></i> Back to Interview Prep
+                        </a>
+                    `;
+                } catch (e) {
+                    console.error("Auth sync error:", e);
+                }
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem("synapse_token");
+            localStorage.removeItem("synapse_user");
+            window.location.reload();
+        }
+
+        window.addEventListener('DOMContentLoaded', syncNavbarAuth);
+    </script>
+</body>
+</html>

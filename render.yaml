@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: synapse-ai-hackathon
+    runtime: node
+    rootDir: FlowZint-AI-Hackathon-main/backend
+    buildCommand: pip3 install -r ../requirements.txt || pip install -r ../requirements.txt || true && npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false

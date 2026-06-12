@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNAPSE — Live Interview Room</title>
+    <!-- Load Monaco Editor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+    <!-- Tailwind CSS v4 via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;850&family=Plus+Jakarta+Sans:wght@700;800&family=Fira+Code:wght@500&display=swap" rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-brand-bg: #0A0A0A;
+            --color-brand-card: #111111;
+            --color-brand-text: #F5F5F5;
+            --color-brand-red: #D90429;
+            --color-brand-red-light: #E63946;
+            --color-brand-orange: #C97B3D;
+            --color-brand-orange-light: #D08B4E;
+            --color-brand-border: #222222;
+            
+            --font-display: 'Plus Jakarta Sans', sans-serif;
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+    </style>
+
+    <style>
+        :root {
+            --accent-color: #C97B3D;
+            --accent-color-rgb: 201, 123, 61;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            color: #F5F5F5;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, .brand-font {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        
+        /* Grid background pattern */
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: -30;
+            background-size: 50px 50px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+        }
+
+        .peer-placeholder {
+            width: 100px; height: 100px;
+            background: linear-gradient(135deg, #C97B3D, #D90429);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            box-shadow: 0 0 30px rgba(201, 123, 61, 0.4);
+        }
+
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+        .dot-bounce {
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .dot-bounce-1 { animation-delay: -0.32s; }
+        .dot-bounce-2 { animation-delay: -0.16s; }
+        
+        /* Chat scrollbar styling */
+        #chat-messages::-webkit-scrollbar {
+            width: 4px;
+        }
+        #chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #chat-messages::-webkit-scrollbar-thumb {
+            background: #222;
+            border-radius: 2px;
+        }
+        #chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #333;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen bg-brand-bg text-brand-text flex flex-col justify-between overflow-hidden" id="app-body">
+
+    <!-- Grid Layout Background -->
+    <div class="grid-overlay"></div>
+
+    <!-- Start Interview Overlay -->
+    <div id="start-interview-overlay" class="fixed inset-0 bg-[#050505]/95 z-[9999] flex flex-col justify-center items-center backdrop-blur-md p-6">
+        <div class="glass-card border border-brand-orange/30 p-10 rounded-2xl max-w-md text-center flex flex-col items-center gap-6" style="background: rgba(13,13,13,0.85); box-shadow: 0 0 50px rgba(201,123,61,0.15);">
+            <i class="fa-solid fa-users-viewfinder text-6xl text-brand-orange filter drop-shadow-[0_0_15px_rgba(201,123,61,0.55)]"></i>
+            <h2 class="text-2xl font-extrabold text-white leading-tight font-display">Ready to Start Interview?</h2>
+            <p class="text-xs text-neutral-400 leading-relaxed font-sans">
+                You are about to enter the live peer mock interview room. Please ensure your microphone and camera permissions are enabled so you can communicate with Alex.
+            </p>
+            <button onclick="startInterviewSession()" class="w-full bg-gradient-to-r from-brand-orange to-brand-red hover:from-brand-orange-light hover:to-brand-red-light text-white font-bold py-4 px-6 rounded-xl transition-all shadow-xl shadow-brand-red/10 hover:shadow-brand-red/20 transform hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2">
+                <i class="fa-solid fa-play"></i> Join Interview Room
+            </button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="h-16 bg-brand-card/85 border-b border-brand-border flex items-center justify-between px-6 z-10">
+        <div class="font-bold flex items-center gap-3">
+            <i class="fa-solid fa-code text-brand-orange"></i> 
+            <span class="brand-font text-white">Mock Interview: Arrays & Hashing (Medium)</span>
+        </div>
+        <div class="font-mono bg-brand-orange/10 text-brand-orange px-4 py-1.5 rounded-lg border border-brand-orange/30 font-bold text-xs flex items-center gap-2">
+            <i class="fa-regular fa-clock"></i> <span id="timeDisplay">45:00</span>
+        </div>
+    </header>
+
+    <!-- Workspace -->
+    <div class="flex-1 flex h-[calc(100vh-144px)] relative z-10 flex-col md:flex-row">
+        
+        <!-- Videos column -->
+        <div class="w-full md:w-96 bg-black flex flex-col border-r border-brand-border">
+            <!-- Peer Video Feed (Simulated) -->
+            <div class="flex-1 min-h-[220px] relative bg-[#090909] flex items-center justify-center overflow-hidden border-b border-black">
+                <div class="peer-placeholder">A</div>
+                <div class="absolute top-5 right-5 flex gap-1" id="alex-anim" style="display:none;">
+                    <div class="w-2 h-2 rounded-full bg-green-500 dot-bounce dot-bounce-1"></div>
+                    <div class="w-2 h-2 rounded-full bg-green-500 dot-bounce dot-bounce-2"></div>
+                    <div class="w-2 h-2 rounded-full bg-green-500 dot-bounce"></div>
+                </div>
+                <div class="absolute bottom-4 left-4 bg-black/75 px-3 py-1.5 rounded-lg text-xs border border-white/10 z-10 flex items-center gap-2">
+                    <i class="fa-solid fa-microphone-lines-slash text-red-500" id="alex-mic"></i> 
+                    Alex D. (Peer)
+                </div>
+                <div id="alex-caption" class="absolute top-5 left-5 right-5 bg-black/80 p-3 rounded-lg text-xs text-center text-white border border-white/10 hidden z-20"></div>
+            </div>
+            
+            <!-- Local User Video Feed -->
+            <div class="flex-1 min-h-[220px] relative bg-[#090909] flex items-center justify-center overflow-hidden">
+                <video id="localVideo" autoplay muted playsinline class="w-full h-full object-cover scale-x-[-1] bg-black"></video>
+                <div class="absolute bottom-4 left-4 bg-black/75 px-3 py-1.5 rounded-lg text-xs border border-white/10 z-10 flex items-center gap-2">
+                    <i class="fa-solid fa-microphone text-green-500" id="localMicIcon"></i> 
+                    You
+                </div>
+                <div id="camOffOverlay" class="absolute inset-0 bg-[#0f0f0f] z-50 hidden items-center justify-center">
+                    <div class="peer-placeholder" style="background: rgba(255,255,255,0.05); box-shadow: none;">U</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor column -->
+        <div class="flex-1 flex flex-col bg-brand-bg">
+            <div class="h-11 bg-brand-card flex border-b border-brand-border items-center justify-between px-2">
+                <div class="flex items-center">
+                    <button id="tab-java" onclick="switchLanguage('java')" class="px-4 py-2.5 text-xs font-bold text-brand-orange border-b-2 border-brand-orange bg-brand-bg/50 border-r border-brand-border flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-brands fa-java text-brand-orange"></i> Java
+                    </button>
+                    <button id="tab-python" onclick="switchLanguage('python')" class="px-4 py-2.5 text-xs font-bold text-neutral-400 hover:text-white border-b-2 border-transparent hover:bg-white/5 border-r border-brand-border flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-brands fa-python text-blue-400"></i> Python
+                    </button>
+                    <button id="tab-cpp" onclick="switchLanguage('cpp')" class="px-4 py-2.5 text-xs font-bold text-neutral-400 hover:text-white border-b-2 border-transparent hover:bg-white/5 border-r border-brand-border flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-code text-blue-500"></i> C++
+                    </button>
+                </div>
+            </div>
+            <div id="editor-container" class="flex-1"></div>
+        </div>
+
+        <!-- Chat column -->
+        <div id="chat-panel" class="w-full md:w-80 bg-brand-card border-l border-brand-border flex flex-col hidden">
+            <!-- Chat Header -->
+            <div class="h-11 border-b border-brand-border flex items-center justify-between px-4">
+                <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-comments text-brand-orange"></i> Interview Chat</span>
+                <button onclick="toggleChat()" class="text-neutral-400 hover:text-white text-xs cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <!-- Chat Log -->
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
+                <!-- Messages will be appended here -->
+            </div>
+            <!-- Typing Indicator -->
+            <div id="chat-typing" class="px-4 py-2 text-[10px] text-neutral-400 italic hidden flex items-center gap-1.5">
+                <i class="fa-solid fa-circle-notch fa-spin text-brand-orange"></i> Alex is thinking...
+            </div>
+            <!-- Chat Input -->
+            <div class="p-3 border-t border-brand-border bg-black/40 flex items-center gap-2">
+                <input type="text" id="chat-input" placeholder="Type message to Alex..." class="flex-1 bg-black/60 border border-brand-border rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-orange" onkeydown="if(event.key === 'Enter') sendChatMessage()">
+                <button onclick="sendChatMessage()" class="bg-brand-orange hover:bg-brand-orange-light text-black font-bold p-2 rounded-lg cursor-pointer transition-all flex items-center justify-center"><i class="fa-solid fa-paper-plane text-xs"></i></button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Controls -->
+    <footer class="h-20 bg-brand-card/85 border-t border-brand-border flex items-center justify-center gap-4 z-10">
+        <button class="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center text-lg text-white cursor-pointer transition-all" id="micBtn" onclick="toggleMic()" title="Toggle Microphone">
+            <i class="fa-solid fa-microphone"></i>
+        </button>
+        <button class="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center text-lg text-white cursor-pointer transition-all" id="camBtn" onclick="toggleCam()" title="Toggle Camera">
+            <i class="fa-solid fa-video"></i>
+        </button>
+        <button class="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center text-lg text-white cursor-pointer transition-all" title="Share Screen (Simulated)" onclick="alert('Google Chrome wants to share the contents of your screen. (Simulated)')">
+            <i class="fa-solid fa-display"></i>
+        </button>
+        <button class="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center text-lg text-white cursor-pointer transition-all" id="chatBtn" title="Chat Logs" onclick="toggleChat()">
+            <i class="fa-solid fa-message"></i>
+        </button>
+        <a href="mock-interview.html" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full text-sm font-semibold flex items-center gap-2 shadow-lg shadow-red-600/10 hover:shadow-red-600/20 transition-all cursor-pointer">
+            <i class="fa-solid fa-phone-slash"></i> End Call
+        </a>
+    </footer>
+
+
+
+    <!-- Scripts -->
+    <script>
+        // Start Local Video Feed
+        let localStream;
+        let isMicOn = true;
+        let isCamOn = true;
+        let codeEditor;
+        let currentLanguage = 'java';
+
+        const LANGUAGE_TEMPLATES = {
+            java: 'class Solution {\n    public static void main(String[] args) {\n        // Solve Two Sum in Java\n        \n    }\n}',
+            python: 'class Solution:\n    def twoSum(self, nums: list[int], target: int) -> list[int]:\n        # Solve Two Sum in Python\n        pass',
+            cpp: '#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<int> twoSum(vector<int>& nums, int target) {\n        // Solve Two Sum in C++\n        \n    }\n};'
+        };
+
+        async function initCamera() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                const videoEl = document.getElementById('localVideo');
+                videoEl.srcObject = localStream;
+            } catch (err) {
+                console.error("Error accessing media devices.", err);
+                const overlay = document.getElementById('camOffOverlay');
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+                
+                isMicOn = false; isCamOn = false;
+                document.getElementById('micBtn').classList.add('bg-red-500/20', 'text-red-500', 'border-red-500/40');
+                document.getElementById('micBtn').innerHTML = '<i class="fa-solid fa-microphone-slash"></i>';
+                document.getElementById('camBtn').classList.add('bg-red-500/20', 'text-red-500', 'border-red-500/40');
+                document.getElementById('camBtn').innerHTML = '<i class="fa-solid fa-video-slash"></i>';
+            }
+        }
+
+        function toggleMic() {
+            if(!localStream) return;
+            isMicOn = !isMicOn;
+            
+            const audioTracks = localStream.getAudioTracks();
+            if(audioTracks.length > 0) audioTracks[0].enabled = isMicOn;
+            
+            const btn = document.getElementById('micBtn');
+            const icon = document.getElementById('localMicIcon');
+            
+            if(isMicOn) {
+                btn.classList.remove('bg-red-500/20', 'text-red-500', 'border-red-500/40');
+                btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+                icon.className = 'fa-solid fa-microphone';
+                icon.style.color = '#10b981';
+            } else {
+                btn.classList.add('bg-red-500/20', 'text-red-500', 'border-red-500/40');
+                btn.innerHTML = '<i class="fa-solid fa-microphone-slash"></i>';
+                icon.className = 'fa-solid fa-microphone-slash';
+                icon.style.color = '#ef4444';
+            }
+        }
+
+        function toggleCam() {
+            if(!localStream) return;
+            isCamOn = !isCamOn;
+            
+            const videoTracks = localStream.getVideoTracks();
+            if(videoTracks.length > 0) videoTracks[0].enabled = isCamOn;
+            
+            const btn = document.getElementById('camBtn');
+            const overlay = document.getElementById('camOffOverlay');
+            
+            if(isCamOn) {
+                btn.classList.remove('bg-red-500/20', 'text-red-500', 'border-red-500/40');
+                btn.innerHTML = '<i class="fa-solid fa-video"></i>';
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+            } else {
+                btn.classList.add('bg-red-500/20', 'text-red-500', 'border-red-500/40');
+                btn.innerHTML = '<i class="fa-solid fa-video-slash"></i>';
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+            }
+        }
+
+        // Timer Logic
+        let timeLeft = 45 * 60;
+        let timerInterval = null;
+        function startTimer() {
+            if (timerInterval) return;
+            timerInterval = setInterval(() => {
+                if(timeLeft <= 0) return;
+                timeLeft--;
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
+                document.getElementById('timeDisplay').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+            }, 1000);
+        }
+
+        // Load Monaco Editor
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' }});
+        require(['vs/editor/editor.main'], function() {
+            monaco.editor.defineTheme('synapse-dark', {
+                base: 'vs-dark', inherit: true,
+                rules: [],
+                colors: { 
+                    'editor.background': '#0A0A0A',
+                    'editor.lineHighlightBackground': '#111111',
+                    'editorLineNumber.foreground': '#444444'
+                }
+            });
+            
+            var editor = monaco.editor.create(document.getElementById('editor-container'), {
+                value: 'class Solution {\n    public static void main(String[] args) {\n        // Type your solution here. Make sure class is named Solution and contains main method.\n        System.out.println("Hello, welcome to Synapse Live Interview Room!");\n    }\n}',
+                language: 'java',
+                theme: 'synapse-dark',
+                automaticLayout: true,
+                fontSize: 15,
+                fontFamily: "'Fira Code', monospace",
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                padding: { top: 20 }
+            });
+            codeEditor = editor;
+        });
+
+        // --- LANGUAGE SWITCHING ---
+        function switchLanguage(lang) {
+            if (!codeEditor) return;
+            
+            // Confirm with user if they have typed code
+            const currentCode = codeEditor.getValue().trim();
+            const defaultForCurrent = LANGUAGE_TEMPLATES[currentLanguage].trim();
+            if (currentCode !== defaultForCurrent && currentCode.length > 50) {
+                if (!confirm("Switching language will replace your current code. Do you want to proceed?")) {
+                    return;
+                }
+            }
+
+            currentLanguage = lang;
+
+            // Update tab styles
+            const tabs = {
+                java: { id: 'tab-java', activeColor: 'text-brand-orange', borderActive: 'border-brand-orange' },
+                python: { id: 'tab-python', activeColor: 'text-blue-400', borderActive: 'border-blue-400' },
+                cpp: { id: 'tab-cpp', activeColor: 'text-blue-500', borderActive: 'border-blue-500' }
+            };
+
+            Object.keys(tabs).forEach(k => {
+                const tabEl = document.getElementById(tabs[k].id);
+                if (k === lang) {
+                    tabEl.className = `px-4 py-2.5 text-xs font-bold ${tabs[k].activeColor} border-b-2 ${tabs[k].borderActive} bg-brand-bg/50 border-r border-brand-border flex items-center gap-1.5 cursor-pointer`;
+                } else {
+                    tabEl.className = `px-4 py-2.5 text-xs font-bold text-neutral-400 hover:text-white border-b-2 border-transparent hover:bg-white/5 border-r border-brand-border flex items-center gap-1.5 cursor-pointer`;
+                }
+            });
+
+            // Set editor language & value
+            const monacoLangMap = {
+                java: 'java',
+                python: 'python',
+                cpp: 'cpp'
+            };
+            const model = codeEditor.getModel();
+            monaco.editor.setModelLanguage(model, monacoLangMap[lang]);
+            codeEditor.setValue(LANGUAGE_TEMPLATES[lang]);
+        }
+
+        // --- INTERVIEW CHAT LOGIC ---
+        function toggleChat() {
+            const chatPanel = document.getElementById('chat-panel');
+            const chatBtn = document.getElementById('chatBtn');
+            if (chatPanel.classList.contains('hidden')) {
+                chatPanel.classList.remove('hidden');
+                chatBtn.classList.add('bg-brand-orange/20', 'text-brand-orange', 'border-brand-orange/40');
+            } else {
+                chatPanel.classList.add('hidden');
+                chatBtn.classList.remove('bg-brand-orange/20', 'text-brand-orange', 'border-brand-orange/40');
+            }
+        }
+
+        function appendChatMessage(sender, text, isSelf) {
+            const chatMessages = document.getElementById('chat-messages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `flex flex-col ${isSelf ? 'items-end' : 'items-start'}`;
+            
+            const senderName = document.createElement('span');
+            senderName.className = 'text-[9px] text-neutral-400 mb-1';
+            senderName.innerText = sender;
+            
+            const bubble = document.createElement('div');
+            bubble.className = `max-w-[85%] rounded-xl px-3 py-2 leading-relaxed ${isSelf ? 'bg-brand-orange text-black font-medium' : 'bg-black/40 border border-brand-border text-white'}`;
+            bubble.innerText = text;
+            
+            msgDiv.appendChild(senderName);
+            msgDiv.appendChild(bubble);
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            input.value = '';
+            appendChatMessage('You', text, true);
+            
+            // Show typing indicator
+            const typing = document.getElementById('chat-typing');
+            typing.classList.remove('hidden');
+            
+            try {
+                const backendUrl = (() => {
+                    const { protocol, hostname } = window.location;
+                    const isLocal = protocol === 'file:' || hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
+                    if (isLocal) return 'http://localhost:5000';
+                    return window.location.origin;
+                })();
+                
+                let username = "";
+                try {
+                    const userStr = localStorage.getItem("synapse_user");
+                    if (userStr) {
+                        const userObj = JSON.parse(userStr);
+                        if (userObj && userObj.name) {
+                            username = userObj.name;
+                        }
+                    }
+                } catch(e) {}
+
+                const res = await fetch(`${backendUrl}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text, userName: username })
+                });
+                const data = await res.json();
+                typing.classList.add('hidden');
+                
+                AlexAI.speak(data.reply);
+            } catch (err) {
+                console.error(err);
+                typing.classList.add('hidden');
+                appendChatMessage('Alex', "I lost connection to the server. Please check the backend.", false);
+            }
+        }
+
+        // --- ALEX AI PEER IMPLEMENTATION ---
+        const AlexAI = {
+            synth: window.speechSynthesis,
+            recognition: null,
+            state: 0,
+            isListening: false,
+            silenceTimer: null,
+            latestTranscript: "",
+            
+            init() {
+                this.synth.getVoices();
+                
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    this.recognition = new SpeechRecognition();
+                    this.recognition.continuous = true;
+                    this.recognition.interimResults = true;
+                    
+                    this.recognition.onresult = (event) => {
+                        let finalTxt = "";
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            if (event.results[i].isFinal) finalTxt += event.results[i][0].transcript + " ";
+                        }
+                        if(finalTxt.trim().length > 0) {
+                            this.latestTranscript += finalTxt;
+                            this.resetSilenceTimer();
+                        }
+                    };
+                    
+                    this.recognition.onerror = (event) => {
+                        console.warn("SpeechRecognition error:", event.error);
+                    };
+
+                    this.recognition.onend = () => {
+                        if(this.isListening) {
+                            try { this.recognition.start(); } catch(e){}
+                        } 
+                    };
+                }
+                
+                setTimeout(() => this.speak("Hey there, my name is Alex. To start off, could you please tell me about yourself and your educational background?"), 3500);
+            },
+            
+            speak(text) {
+                this.stopListening();
+                
+                document.getElementById('alex-anim').style.display = 'flex';
+                document.getElementById('alex-mic').className = 'fa-solid fa-microphone';
+                document.getElementById('alex-mic').style.color = '#10b981';
+                
+                const caption = document.getElementById('alex-caption');
+                caption.classList.remove('hidden');
+                caption.innerText = `"${text}"`;
+                
+                // Add to chat log
+                appendChatMessage('Alex (Interviewer)', text, false);
+                
+                // Always cancel to clear any stuck queue in browser
+                this.synth.cancel();
+                
+                let utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                utterance.pitch = 0.95;
+                
+                let voices = this.synth.getVoices();
+                let preferredVoice = voices.find(v => v.lang.includes('en-US') && (v.name.includes('Male') || v.name.includes('Google UK English Male'))) || voices[0];
+                if (preferredVoice) utterance.voice = preferredVoice;
+                
+                const handleSpeechEnd = () => {
+                    document.getElementById('alex-anim').style.display = 'none';
+                    document.getElementById('alex-mic').className = 'fa-solid fa-microphone-slash';
+                    document.getElementById('alex-mic').style.color = '#ef4444';
+                    setTimeout(() => caption.classList.add('hidden'), 1500);
+                    
+                    this.latestTranscript = "";
+                    this.startListening();
+                };
+
+                utterance.onend = handleSpeechEnd;
+                utterance.onerror = (err) => {
+                    console.warn("SpeechSynthesis error:", err);
+                    handleSpeechEnd();
+                };
+                
+                // Delay speaking slightly so Chrome finishes processing the cancel command
+                setTimeout(() => {
+                    this.synth.speak(utterance);
+                }, 100);
+            },
+            
+            startListening() {
+                if(!this.recognition) return;
+                this.isListening = true;
+                try { this.recognition.start(); } catch(e){}
+                this.resetSilenceTimer();
+            },
+            
+            stopListening() {
+                this.isListening = false;
+                clearTimeout(this.silenceTimer);
+                if(this.recognition) this.recognition.stop();
+            },
+            
+            resetSilenceTimer() {
+                clearTimeout(this.silenceTimer);
+                this.silenceTimer = setTimeout(() => {
+                    if(this.latestTranscript.trim().length > 0) {
+                        this.processResponse(this.latestTranscript.toLowerCase());
+                    }
+                }, 3000);
+            },
+            
+            processResponse(input) {
+                document.getElementById('alex-anim').style.display = 'flex';
+                
+                const backendUrl = (() => {
+                    const { protocol, hostname } = window.location;
+                    const isLocal = protocol === 'file:' || hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
+                    if (isLocal) return 'http://localhost:5000';
+                    return window.location.origin;
+                })();
+                let username = "";
+                try {
+                    const userStr = localStorage.getItem("synapse_user");
+                    if (userStr) {
+                        const userObj = JSON.parse(userStr);
+                        if (userObj && userObj.name) {
+                            username = userObj.name;
+                        }
+                    }
+                } catch(e) {}
+
+                fetch(`${backendUrl}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: input, userName: username })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.speak(data.reply);
+                })
+                .catch(err => {
+                    console.error('API Error:', err);
+                    this.speak("I'm sorry, I lost connection to the backend server. Make sure your Node.js application is running.");
+                });
+            }
+        };
+
+        // Handle overlay click to start session on user interaction
+        function startInterviewSession() {
+            const overlay = document.getElementById('start-interview-overlay');
+            if (overlay) overlay.remove();
+            
+            // Initialize camera, start timer, and start AI interviewer
+            initCamera();
+            startTimer();
+            AlexAI.init();
+        }
+    </script>
+</body>
+</html>

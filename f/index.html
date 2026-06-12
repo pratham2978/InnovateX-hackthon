@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNAPSE — Premium Student Dashboard</title>
+    <!-- Tailwind CSS v4 via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind v4 Custom Theme Configuration -->
+    <style type="text/tailwindcss">
+        @theme {
+            --color-brand-bg: #0A0A0A;
+            --color-brand-card: #151515;
+            --color-brand-card-light: #1A1A1A;
+            --color-brand-text: #F5F5F5;
+            --color-brand-red: #D90429;
+            --color-brand-red-light: #E63946;
+            --color-brand-orange: #C97B3D;
+            --color-brand-orange-light: #D08B4E;
+            --color-brand-border: #2A2A2A;
+            
+            --font-display: 'Plus Jakarta Sans', sans-serif;
+            --font-sans: 'Inter', sans-serif;
+        }
+    </style>
+
+    <style>
+        :root {
+            --accent-color: #D90429;
+            --accent-color-rgb: 217, 4, 41;
+            --accent-color-light: #E63946;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0A0A0A;
+            color: #F5F5F5;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, .brand-font {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        /* Custom Premium Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0A0A0A;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2A2A2A;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-color);
+        }
+        
+        /* Glassmorphism Classes */
+        .glass-card {
+            background: rgba(21, 21, 21, 0.55);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-card:hover {
+            border-color: rgba(var(--accent-color-rgb), 0.7);
+            box-shadow: 0 0 50px rgba(var(--accent-color-rgb), 0.3);
+            transform: translateY(-6px) scale(1.01);
+        }
+        
+        /* Ambient Glowing Backdrops */
+        .glow-bg {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(110px);
+            opacity: 0.35;
+            transition: opacity 0.8s, background-color 0.8s, transform 0.8s;
+        }
+
+        /* Video CRT/Hacker Grid Overlay */
+        .video-grid-overlay {
+            background-image: linear-gradient(rgba(10, 10, 10, 0.1) 50%, rgba(0, 0, 0, 0.35) 50%), 
+                              linear-gradient(90deg, rgba(201, 123, 61, 0.03), rgba(0, 0, 0, 0), rgba(217, 4, 41, 0.03));
+            background-size: 100% 4px, 6px 100%;
+        }
+
+        /* FAQ accordion answers */
+        .faq-answer {
+            max-height: 0px;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen bg-brand-bg text-brand-text selection:bg-brand-red selection:text-white" id="app-body">
+
+    <!-- Interactive Neural Network Background Canvas -->
+    <canvas id="canvas-synapse" class="fixed inset-0 w-full h-full -z-20 pointer-events-none opacity-45"></canvas>
+
+    <!-- Dynamic Glow Elements -->
+    <div id="glow-1" class="glow-bg w-[500px] h-[500px] top-[-150px] left-[-150px] bg-brand-red"></div>
+    <div id="glow-2" class="glow-bg w-[700px] h-[700px] bottom-[-200px] right-[-200px] bg-brand-orange-light"></div>
+
+    <!-- Navigation Header -->
+    <nav class="sticky top-0 z-50 w-full px-6 py-4 glass-card border-b border-brand-border bg-brand-bg/70 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3 group cursor-pointer" onclick="window.location.href='index.html'">
+                <span class="text-xl font-bold tracking-wider text-white brand-font">SYNAPSE</span>
+            </div>
+            
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-400">
+                <a href="index.html" class="hover:text-white transition-colors">Home</a>
+                <a href="features.html" class="hover:text-white transition-colors">Features</a>
+                <a href="global-ranking.html" class="hover:text-white transition-colors">Global Ranking</a>
+            </div>
+
+            <div class="flex items-center gap-4" id="nav-auth-container">
+                <button onclick="window.location.href='auth.html'" class="text-sm font-medium text-neutral-300 hover:text-white transition-colors cursor-pointer">Log In</button>
+                <a href="features.html" class="bg-brand-red/10 hover:bg-brand-red/20 border border-brand-red/40 text-brand-text px-4 py-2 rounded-lg text-sm font-medium tracking-wide transition-all shadow-md hover:shadow-brand-red/10 cursor-pointer">
+                    Enter Sandbox
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero" class="relative min-h-[90vh] flex flex-col items-center justify-center px-6 text-center z-10 pt-16 pb-12 overflow-hidden">
+        
+        <!-- Background Video with Fallbacks -->
+        <video autoplay loop muted playsinline class="absolute inset-0 w-full h-full object-cover -z-10 opacity-55" style="filter: brightness(1.35) contrast(1.15);">
+            <source src="Synapse_dashboard.mp4" type="video/mp4">
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-matrix-style-falling-green-code-32598-large.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        
+        <!-- Ambient Overlay for readability -->
+        <div class="absolute inset-0 bg-gradient-to-b from-brand-bg/15 via-brand-bg/40 to-brand-bg -z-10"></div>
+        <div class="absolute inset-0 video-grid-overlay opacity-25 pointer-events-none -z-10"></div>
+
+        <div class="max-w-4xl space-y-6">
+            <p class="text-xs md:text-sm text-brand-orange tracking-widest uppercase font-semibold">
+                Worried about college placements? Stop stressing.
+            </p>
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-white leading-tight">
+                Debug your degree,<br class="hidden md:block">
+                <span class="bg-gradient-to-r from-brand-text via-brand-orange-light to-brand-red bg-clip-text text-transparent">ace your placements.</span>
+            </h1>
+            <p class="text-neutral-400 max-w-xl mx-auto text-base md:text-lg font-light tracking-wide">
+                An ecosystem designed to seamlessly split your chaotic college workflow from critical high-ticket placement prep.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+                <!-- Logged Out Buttons -->
+                <a href="auth.html" id="btn-login-cta" class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-medium tracking-wide bg-gradient-to-r from-brand-orange to-brand-red hover:from-brand-orange-light hover:to-brand-red-light text-white shadow-xl shadow-brand-red/10 hover:shadow-brand-red/20 transform hover:-translate-y-0.5 transition-all text-center flex items-center justify-center gap-2">
+                    Register / Login <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                </a>
+                <a href="features.html" id="btn-explore" class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-medium tracking-wide bg-brand-card border border-brand-border text-neutral-300 hover:text-white hover:border-neutral-700 transition-all text-center flex items-center justify-center gap-2">
+                    Explore Features <i class="fa-solid fa-compass"></i>
+                </a>
+
+                <!-- Logged In Buttons -->
+                <a href="features.html" id="btn-workspace-cta" class="hidden w-full sm:w-auto px-8 py-3.5 rounded-xl font-medium tracking-wide bg-gradient-to-r from-brand-orange to-brand-red hover:from-brand-orange-light hover:to-brand-red-light text-white shadow-xl shadow-brand-red/10 hover:shadow-brand-red/20 transform hover:-translate-y-0.5 transition-all text-center flex items-center justify-center gap-2">
+                    Launch Sandbox <i class="fa-solid fa-cubes"></i>
+                </a>
+                <a href="profile.html" id="btn-profile" class="hidden w-full sm:w-auto px-8 py-3.5 rounded-xl font-medium tracking-wide bg-brand-card border border-brand-orange/40 hover:border-brand-orange text-brand-orange hover:text-brand-orange-light transition-all text-center shadow-lg shadow-brand-orange/5 hover:shadow-brand-orange/10 transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                    My Profile <i class="fa-solid fa-user"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-brand-border bg-brand-bg py-10 px-6 relative z-10">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between text-[11px] text-neutral-500 font-light">
+            <div class="flex items-center gap-3 mb-4 sm:mb-0">
+                <span class="text-sm font-bold tracking-wider text-white brand-font">SYNAPSE</span>
+            </div>
+            <p>&copy; 2026 Synapse. Designed for high-performing engineering students.</p>
+            <div class="flex gap-4 mt-4 sm:mt-0">
+                <a href="#" class="hover:text-neutral-300"><i class="fa-brands fa-github text-sm"></i></a>
+                <a href="#" class="hover:text-neutral-300"><i class="fa-brands fa-linkedin text-sm"></i></a>
+                <a href="#" class="hover:text-neutral-300"><i class="fa-brands fa-twitter text-sm"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Interactive JavaScript Logic -->
+    <script>
+        // ==========================================
+        // DYNAMIC NEURAL CANVAS BACKGROUND (SYNAPSE)
+        // ==========================================
+        const canvas = document.getElementById('canvas-synapse');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 85;
+        
+        let mouse = { x: null, y: null, active: false };
+        let glowX = width / 2;
+        let glowY = height / 2;
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            mouse.active = true;
+        });
+
+        window.addEventListener('mouseleave', () => {
+            mouse.active = false;
+        });
+
+        let currentRGB = { r: 217, g: 4, b: 41 }; // Placement red theme default for landing
+        let targetRGB = { r: 217, g: 4, b: 41 };
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.55;
+                this.vy = (Math.random() - 0.5) * 0.55;
+                this.radius = Math.random() * 2.2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (mouse.active) {
+                    const dx = mouse.x - this.x;
+                    const dy = mouse.y - this.y;
+                    const distance = Math.hypot(dx, dy);
+                    if (distance < 170) {
+                        const force = (170 - distance) / 170;
+                        const angle = Math.atan2(dy, dx);
+                        this.x -= Math.cos(angle) * force * 2.0;
+                        this.y -= Math.sin(angle) * force * 2.0;
+                    }
+                }
+
+                if (this.x < 0 || this.x > width) this.vx = -this.vx;
+                if (this.y < 0 || this.y > height) this.vy = -this.vy;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 3.5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${Math.round(currentRGB.r)}, ${Math.round(currentRGB.g)}, ${Math.round(currentRGB.b)}, 0.28)`;
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `#FFFFFF`;
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            currentRGB.r += (targetRGB.r - currentRGB.r) * 0.05;
+            currentRGB.g += (targetRGB.g - currentRGB.g) * 0.05;
+            currentRGB.b += (targetRGB.b - currentRGB.b) * 0.05;
+
+            const glow1 = document.getElementById('glow-1');
+            if (glow1) {
+                let targetX = mouse.active ? mouse.x : width / 2;
+                let targetY = mouse.active ? mouse.y : height / 2;
+                glowX += (targetX - glowX) * 0.04;
+                glowY += (targetY - glowY) * 0.04;
+                glow1.style.left = `${glowX - 250}px`;
+                glow1.style.top = `${glowY - 250}px`;
+            }
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dist = Math.hypot(particles[i].x - particles[j].x, particles[i].y - particles[j].y);
+                    if (dist < 125) {
+                        const alpha = (1 - dist / 125) * 0.55;
+
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(${Math.round(currentRGB.r)}, ${Math.round(currentRGB.g)}, ${Math.round(currentRGB.b)}, ${alpha * 0.35})`;
+                        ctx.lineWidth = 3.5;
+                        ctx.stroke();
+
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(${Math.round(currentRGB.r)}, ${Math.round(currentRGB.g)}, ${Math.round(currentRGB.b)}, ${alpha})`;
+                        ctx.lineWidth = 1.0;
+                        ctx.stroke();
+                    }
+                }
+
+                if (mouse.active) {
+                    const distToMouse = Math.hypot(particles[i].x - mouse.x, particles[i].y - mouse.y);
+                    if (distToMouse < 170) {
+                        const alpha = (1 - distToMouse / 170) * 0.75;
+
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.strokeStyle = `rgba(${Math.round(currentRGB.r)}, ${Math.round(currentRGB.g)}, ${Math.round(currentRGB.b)}, ${alpha * 0.35})`;
+                        ctx.lineWidth = 5.0;
+                        ctx.stroke();
+
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.strokeStyle = `rgba(${Math.round(currentRGB.r)}, ${Math.round(currentRGB.g)}, ${Math.round(currentRGB.b)}, ${alpha})`;
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // Sync Navbar Auth State
+        function syncNavbarAuth() {
+            const token = localStorage.getItem("synapse_token");
+            const userStr = localStorage.getItem("synapse_user");
+            const container = document.getElementById("nav-auth-container");
+            
+            if (token && userStr && container) {
+                try {
+                    const user = JSON.parse(userStr);
+                    const initials = user.name ? user.name.split(" ").map(n => n.charAt(0)).join("").toUpperCase().slice(0, 2) : "U";
+                    container.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <div onclick="window.location.href='profile.html'" class="w-8 h-8 rounded-full bg-brand-orange/20 border border-brand-orange/40 hover:border-brand-orange hover:bg-brand-orange/35 flex items-center justify-center text-brand-orange text-xs font-bold font-mono cursor-pointer transition-all" title="View Profile">
+                                ${initials}
+                            </div>
+                            <span onclick="window.location.href='profile.html'" class="text-xs text-neutral-300 hover:text-white font-semibold hidden sm:inline cursor-pointer transition-all" title="View Profile">${user.name || 'User'}</span>
+                            <button onclick="handleLogout()" class="text-xs font-semibold px-3 py-1.5 border border-brand-border rounded-lg text-neutral-400 hover:text-white hover:border-neutral-500 transition-all cursor-pointer">
+                                Log Out
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Toggle hero buttons based on auth state
+                    const btnLoginCta = document.getElementById("btn-login-cta");
+                    const btnExplore = document.getElementById("btn-explore");
+                    const btnWorkspaceCta = document.getElementById("btn-workspace-cta");
+                    const btnProfile = document.getElementById("btn-profile");
+                    
+                    if (btnLoginCta && btnExplore && btnWorkspaceCta && btnProfile) {
+                        btnLoginCta.classList.add("hidden");
+                        btnExplore.classList.add("hidden");
+                        btnWorkspaceCta.classList.remove("hidden");
+                        btnProfile.classList.remove("hidden");
+                    }
+                } catch (e) {
+                    console.error("Auth sync error:", e);
+                }
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem("synapse_token");
+            localStorage.removeItem("synapse_user");
+            window.location.reload();
+        }
+
+        window.addEventListener('DOMContentLoaded', syncNavbarAuth);
+    </script>
+</body>
+</html>

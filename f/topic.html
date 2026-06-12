@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNAPSE — Topic Questions</title>
+    <!-- Tailwind CSS v4 via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-brand-bg: #0A0A0A;
+            --color-brand-card: #111111;
+            --color-brand-text: #F5F5F5;
+            --color-brand-red: #D90429;
+            --color-brand-red-light: #E63946;
+            --color-brand-orange: #C97B3D;
+            --color-brand-orange-light: #D08B4E;
+            --color-brand-border: #222222;
+            
+            --font-display: 'Plus Jakarta Sans', sans-serif;
+            --font-sans: 'Inter', sans-serif;
+        }
+    </style>
+
+    <style>
+        :root {
+            --accent-color: #C97B3D;
+            --accent-color-rgb: 201, 123, 61;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            color: #F5F5F5;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, .brand-font {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        
+        /* Grid background pattern */
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: -30;
+            background-size: 50px 50px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+        }
+
+        /* Glassmorphism styling */
+        .glass-panel {
+            background: rgba(13, 13, 13, 0.7);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        /* Checked rows */
+        .q-row.row-done {
+            opacity: 0.5;
+        }
+
+        /* Checkbox */
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 6px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .checkbox:hover {
+            border-color: #C97B3D;
+            background: rgba(201, 123, 61, 0.1);
+        }
+        .checkbox.checked {
+            background: #C97B3D;
+            border-color: #C97B3D;
+            color: #000;
+        }
+
+        /* Note Button */
+        .note-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .note-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .note-btn.has-note {
+            background: rgba(251, 191, 36, 0.08);
+        }
+
+        /* Star Button */
+        .star-btn {
+            transition: transform 0.2s;
+        }
+        .star-btn:hover {
+            transform: scale(1.3);
+        }
+        .star-btn.starred {
+            animation: starPop 0.3s ease;
+        }
+
+        @keyframes starPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); }
+            100% { transform: scale(1); }
+        }
+
+        /* Tab active state */
+        [data-tab].active {
+            background: rgba(201, 123, 61, 0.15) !important;
+            color: #D08B4E !important;
+            border-color: rgba(201, 123, 61, 0.4) !important;
+        }
+
+        /* Progress Circle */
+        .q-progress-circle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Fira Code', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Table */
+        .q-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        .q-table th {
+            padding: 14px 16px;
+            color: #94a3b8;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .q-table td {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            font-size: 0.875rem;
+        }
+        .q-row:hover {
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        /* Badges */
+        .badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .badge.easy { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .badge.med { background: rgba(251, 191, 36, 0.1); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.2); }
+        .badge.hard { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+        /* Accordion */
+        .q-acc-item {
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            background: rgba(13, 13, 13, 0.4);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        .q-acc-header {
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            background: rgba(255, 255, 255, 0.01);
+        }
+        .q-acc-header:hover {
+            background: rgba(201, 123, 61, 0.03);
+        }
+        .q-acc-title {
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .q-acc-title i {
+            transition: transform 0.3s;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+        .q-acc-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0, 1, 0, 1);
+        }
+        .q-acc-item.expanded .q-acc-body {
+            max-height: 2000px;
+            transition: max-height 0.3s cubic-bezier(1, 0, 1, 0);
+        }
+        .q-acc-item.expanded .q-acc-title i {
+            transform: rotate(90deg);
+            color: #C97B3D;
+        }
+        
+        /* Ambient Glowing Backdrops */
+        .glow-bg {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(130px);
+            opacity: 0.35;
+            transition: opacity 0.8s, transform 0.8s;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen bg-brand-bg text-brand-text selection:bg-brand-orange selection:text-white" id="app-body">
+
+    <!-- Grid Layout Background -->
+    <div class="grid-overlay"></div>
+
+    <!-- Interactive Neural Network Background Canvas -->
+    <canvas id="canvas-synapse" class="fixed inset-0 w-full h-full -z-20 pointer-events-none opacity-25"></canvas>
+
+    <!-- Ambient Glow Element -->
+    <div id="glow-1" class="glow-bg w-[600px] h-[600px] top-[10%] left-[20%] bg-brand-orange/40"></div>
+
+    <!-- Navigation Header -->
+    <nav class="sticky top-0 z-50 w-full px-6 py-4 border-b border-brand-border bg-brand-bg/60 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3 group cursor-pointer" onclick="window.location.href='index.html'">
+                <span class="text-xl font-bold tracking-wider text-white brand-font">SYNAPSE</span>
+            </div>
+            
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-400">
+                <a href="index.html" class="hover:text-white transition-colors">Home</a>
+                <a href="features.html" class="hover:text-white transition-colors">Features</a>
+                <a href="global-ranking.html" class="hover:text-white transition-colors">Global Ranking</a>
+            </div>
+
+            <div class="flex items-center gap-4" id="nav-auth-container">
+                <button onclick="window.location.href='auth.html'" class="text-xs font-semibold px-4 py-2 border border-brand-border rounded-lg text-neutral-300 hover:text-white hover:border-neutral-500 transition-all cursor-pointer">
+                    Log In
+                </button>
+                <a href="dsa-patterns.html" class="text-xs font-semibold px-4 py-2 border border-brand-border rounded-lg text-neutral-300 hover:text-white hover:border-neutral-500 transition-all">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Back to DSA
+                </a>
+            </div>
+        </div>
+    </nav>
+    <!-- Auth Guard: redirect to login if not authenticated -->
+    <script src="js/auth-guard.js"></script>
+
+
+    <!-- Main Content Container -->
+    <main class="py-16 px-6 max-w-5xl mx-auto relative z-10 text-left questions-container">
+        
+        <!-- Header Actions & Titles -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-brand-border">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight q-title">Loading Topic...</h1>
+                <p class="text-neutral-400 font-light text-sm mt-2 q-subtitle">Please wait...</p>
+            </div>
+            
+            <div class="flex items-center gap-3 flex-wrap">
+                <button class="px-4 py-2 rounded-lg bg-neutral-900 border border-neutral-800 text-xs font-semibold text-neutral-400 hover:text-white hover:border-neutral-600 transition-all cursor-pointer q-btn">
+                    <i class="fa-solid fa-arrow-rotate-left mr-1.5"></i> Reset Progress
+                </button>
+                <button class="px-4 py-2 rounded-lg bg-neutral-900 border border-neutral-800 text-xs font-semibold text-neutral-400 hover:text-white hover:border-neutral-600 transition-all cursor-pointer q-btn">
+                    Import Progress <i class="fa-regular fa-file ml-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center mt-10 gap-4">
+            <div class="flex p-1 rounded-lg bg-neutral-900 border border-neutral-800 self-start">
+                <button class="px-4 py-1.5 rounded-md text-xs font-semibold text-neutral-300 transition-all cursor-pointer q-btn active" data-tab="all">All Problems</button>
+                <button class="px-4 py-1.5 rounded-md text-xs font-semibold text-neutral-300 transition-all cursor-pointer q-btn" data-tab="revision">Revision</button>
+            </div>
+
+            <div class="flex gap-3 items-center flex-wrap">
+                <button class="w-10 h-10 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-all cursor-pointer q-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+                <select class="px-4 py-2 rounded-lg bg-neutral-900 border border-neutral-800 text-xs font-semibold text-neutral-300 outline-none q-select">
+                    <option value="all">All problems</option>
+                </select>
+                <select class="px-4 py-2 rounded-lg bg-neutral-900 border border-neutral-800 text-xs font-semibold text-neutral-300 outline-none q-select">
+                    <option value="all">Difficulty</option>
+                </select>
+                <button class="px-4 py-2 rounded-lg bg-brand-orange hover:bg-brand-orange-light text-black text-xs font-bold transition-all cursor-pointer q-btn"><i class="fa-solid fa-shuffle mr-1.5"></i> Random Problem</button>
+            </div>
+        </div>
+
+        <!-- Progress Card -->
+        <div class="glass-panel rounded-2xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-center mt-8 gap-6 q-progress-card">
+            <div class="flex items-center gap-6">
+                <div class="q-progress-circle">0%</div>
+                <div>
+                    <h4 class="text-sm font-bold text-white uppercase tracking-wider">Overall Progress</h4>
+                    <p class="text-2xl font-bold font-mono text-white mt-1">
+                        <span id="stat-progress">0</span>
+                        <span class="text-sm text-neutral-500 font-normal">/ <span id="stat-total">0</span> solved</span>
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex gap-6 items-center flex-wrap text-xs font-semibold text-neutral-400">
+                <span class="flex items-center gap-2 bg-neutral-900/60 border border-neutral-800 px-4 py-2 rounded-lg"><i class="fa-solid fa-circle text-[8px] text-green-500"></i> Easy <span class="font-mono text-white ml-1" id="stat-easy">0 / 0</span></span>
+                <span class="flex items-center gap-2 bg-neutral-900/60 border border-neutral-800 px-4 py-2 rounded-lg"><i class="fa-solid fa-circle text-[8px] text-amber-500"></i> Medium <span class="font-mono text-white ml-1" id="stat-med">0 / 0</span></span>
+                <span class="flex items-center gap-2 bg-neutral-900/60 border border-neutral-800 px-4 py-2 rounded-lg"><i class="fa-solid fa-circle text-[8px] text-rose-500"></i> Hard <span class="font-mono text-white ml-1" id="stat-hard">0 / 0</span></span>
+            </div>
+        </div>
+
+        <!-- Accordion List TARGET -->
+        <div class="q-accordion mt-8">
+            <!-- Rendered by topic-renderer.js -->
+        </div>
+
+    </main>
+
+    <script src="js/data.js"></script>
+    <script src="js/topic-renderer.js"></script>
+    <script>
+        // ==========================================
+        // DYNAMIC NEURAL CANVAS BACKGROUND (SYNAPSE)
+        // ==========================================
+        const canvas = document.getElementById('canvas-synapse');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        const particles = [];
+        const particleCount = 65;
+        let mouse = { x: null, y: null, active: false };
+        let glowX = width / 2;
+        let glowY = height / 2;
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            mouse.active = true;
+        });
+
+        window.addEventListener('mouseleave', () => {
+            mouse.active = false;
+        });
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.55;
+                this.vy = (Math.random() - 0.5) * 0.55;
+                this.radius = Math.random() * 2.2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (mouse.active) {
+                    const dx = mouse.x - this.x;
+                    const dy = mouse.y - this.y;
+                    const distance = Math.hypot(dx, dy);
+                    if (distance < 170) {
+                        const force = (170 - distance) / 170;
+                        const angle = Math.atan2(dy, dx);
+                        this.x -= Math.cos(angle) * force * 2.0;
+                        this.y -= Math.sin(angle) * force * 2.0;
+                    }
+                }
+
+                if (this.x < 0 || this.x > width) this.vx = -this.vx;
+                if (this.y < 0 || this.y > height) this.vy = -this.vy;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 3.5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(201, 123, 61, 0.28)`; // Orange theme glow
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `#FFFFFF`;
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            const glow1 = document.getElementById('glow-1');
+            if (glow1) {
+                let targetX = mouse.active ? mouse.x : width / 2;
+                let targetY = mouse.active ? mouse.y : height / 2;
+                glowX += (targetX - glowX) * 0.04;
+                glowY += (targetY - glowY) * 0.04;
+                glow1.style.left = `${glowX - 300}px`;
+                glow1.style.top = `${glowY - 300}px`;
+            }
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dist = Math.hypot(particles[i].x - particles[j].x, particles[i].y - particles[j].y);
+                    if (dist < 125) {
+                        const alpha = (1 - dist / 125) * 0.55;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(201, 123, 61, ${alpha * 0.35})`;
+                        ctx.lineWidth = 3.5;
+                        ctx.stroke();
+
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(201, 123, 61, ${alpha})`;
+                        ctx.lineWidth = 1.0;
+                        ctx.stroke();
+                    }
+                }
+
+                if (mouse.active) {
+                    const distToMouse = Math.hypot(particles[i].x - mouse.x, particles[i].y - mouse.y);
+                    if (distToMouse < 170) {
+                        const alpha = (1 - distToMouse / 170) * 0.75;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.strokeStyle = `rgba(201, 123, 61, ${alpha * 0.35})`;
+                        ctx.lineWidth = 5.0;
+                        ctx.stroke();
+
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.strokeStyle = `rgba(201, 123, 61, ${alpha})`;
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // Sync Navbar Auth State
+        function syncNavbarAuth() {
+            const token = localStorage.getItem("synapse_token");
+            const userStr = localStorage.getItem("synapse_user");
+            const container = document.getElementById("nav-auth-container");
+            
+            if (token && userStr && container) {
+                try {
+                    const user = JSON.parse(userStr);
+                    const initials = user.name ? user.name.split(" ").map(n => n.charAt(0)).join("").toUpperCase().slice(0, 2) : "U";
+                    container.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <div onclick="window.location.href='profile.html'" class="w-8 h-8 rounded-full bg-brand-orange/20 border border-brand-orange/40 hover:border-brand-orange hover:bg-brand-orange/35 flex items-center justify-center text-brand-orange text-xs font-bold font-mono cursor-pointer transition-all" title="View Profile">
+                                ${initials}
+                            </div>
+                            <span onclick="window.location.href='profile.html'" class="text-xs text-neutral-300 hover:text-white font-semibold hidden sm:inline cursor-pointer transition-all" title="View Profile">${user.name || 'User'}</span>
+                            <button onclick="handleLogout()" class="text-xs font-semibold px-3 py-1.5 border border-brand-border rounded-lg text-neutral-400 hover:text-white hover:border-neutral-500 transition-all cursor-pointer">
+                                Log Out
+                            </button>
+                        </div>
+                        <a href="dsa-patterns.html" class="text-xs font-semibold px-4 py-2 border border-brand-border rounded-lg text-neutral-300 hover:text-white hover:border-neutral-500 transition-all">
+                            <i class="fa-solid fa-arrow-left mr-1"></i> Back to DSA
+                        </a>
+                    `;
+                } catch (e) {
+                    console.error("Auth sync error:", e);
+                }
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem("synapse_token");
+            localStorage.removeItem("synapse_user");
+            window.location.reload();
+        }
+
+        window.addEventListener('DOMContentLoaded', syncNavbarAuth);
+    </script>
+</body>
+</html>

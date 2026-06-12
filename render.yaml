@@ -2,7 +2,7 @@ services:
   - type: web
     name: synapse-ai-hackathon
     runtime: node
-    rootDir: FlowZint-AI-Hackathon-main/backend
+    rootDir: backend
     buildCommand: pip3 install -r ../requirements.txt || pip install -r ../requirements.txt || true && npm install
     startCommand: node server.js
     envVars:

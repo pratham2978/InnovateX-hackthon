@@ -26,15 +26,28 @@ const User = require("./models/user");
 const JWT_SECRET = process.env.JWT_SECRET || "synapse_super_secret_auth_key";
 
 const getPythonPath = () => {
+  const fs = require("fs");
+  console.log(`[getPythonPath] Detecting Python. __dirname is: ${__dirname}`);
+  try {
+    const files = fs.readdirSync(__dirname);
+    console.log(`[getPythonPath] Files in backend directory: ${JSON.stringify(files)}`);
+  } catch (err) {
+    console.error(`[getPythonPath] Failed to read directory:`, err.message);
+  }
+
   if (process.platform === "win32") {
     const localVenv = path.join(__dirname, "venv", "Scripts", "python.exe");
     const localDotVenv = path.join(__dirname, ".venv", "Scripts", "python.exe");
+    console.log(`[getPythonPath] Checking localVenv: ${localVenv} (${fs.existsSync(localVenv)})`);
+    console.log(`[getPythonPath] Checking localDotVenv: ${localDotVenv} (${fs.existsSync(localDotVenv)})`);
     if (fs.existsSync(localVenv)) return localVenv;
     if (fs.existsSync(localDotVenv)) return localDotVenv;
     return "python";
   } else {
     const renderVenv = path.join(__dirname, "venv", "bin", "python");
     const renderDotVenv = path.join(__dirname, ".venv", "bin", "python");
+    console.log(`[getPythonPath] Checking renderVenv: ${renderVenv} (${fs.existsSync(renderVenv)})`);
+    console.log(`[getPythonPath] Checking renderDotVenv: ${renderDotVenv} (${fs.existsSync(renderDotVenv)})`);
     if (fs.existsSync(renderVenv)) return renderVenv;
     if (fs.existsSync(renderDotVenv)) return renderDotVenv;
     return "python3";

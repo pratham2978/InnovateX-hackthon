@@ -99,13 +99,13 @@ const ensurePythonDeps = () => {
   if (hasPip) {
     try {
       console.log("[ensurePythonDeps] Installing dependencies from requirements.txt...");
-      // Try installing with --user option
-      execSync("python3 -m pip install --user -r ../requirements.txt", { stdio: "inherit" });
+      // Try installing with --break-system-packages option
+      execSync("python3 -m pip install --break-system-packages -r ../requirements.txt", { stdio: "inherit" });
       console.log("[ensurePythonDeps] Dependencies installed successfully!");
     } catch (installErr) {
-      console.warn("[ensurePythonDeps] Failed to install dependencies with --user. Retrying without it...");
+      console.warn("[ensurePythonDeps] Failed to install dependencies. Retrying with --user --break-system-packages...");
       try {
-        execSync("python3 -m pip install -r ../requirements.txt", { stdio: "inherit" });
+        execSync("python3 -m pip install --user --break-system-packages -r ../requirements.txt", { stdio: "inherit" });
         console.log("[ensurePythonDeps] Dependencies installed successfully!");
       } catch (fallbackErr) {
         console.error("[ensurePythonDeps] Failed to install dependencies:", fallbackErr.message);
@@ -115,7 +115,7 @@ const ensurePythonDeps = () => {
     // Last ditch effort: try calling raw pip3 or pip directly
     try {
       console.log("[ensurePythonDeps] Attempting raw pip3 installation...");
-      execSync("pip3 install --user -r ../requirements.txt", { stdio: "inherit" });
+      execSync("pip3 install --user --break-system-packages -r ../requirements.txt", { stdio: "inherit" });
       console.log("[ensurePythonDeps] Dependencies installed successfully!");
     } catch (rawErr) {
       console.error("[ensurePythonDeps] All attempts to install Python dependencies failed.");

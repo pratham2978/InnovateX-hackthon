@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { protocol, hostname, port, origin } = window.location;
         const isLocal = protocol === 'file:' || hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]' || hostname.startsWith('192.168.') || hostname.startsWith('10.') || hostname.startsWith('172.');
         if (isLocal) return port === '5000' ? origin : `http://${hostname === 'localhost' || hostname === '[::1]' || protocol === 'file:' ? '127.0.0.1' : hostname}:5000`;
-        return localStorage.getItem('synapse_backend_url') || 'https://synapse-ai-hackathon.onrender.com';
+        return localStorage.getItem('synapse_backend_url') || 'https://innovatex-hackthon.onrender.com';
     })();
 
     try {

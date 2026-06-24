@@ -11,6 +11,7 @@
     
     <!-- Monaco Editor CSS & Loaders -->
     <link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/editor/editor.main.min.css">
+    <link rel="stylesheet" href="css/shared.css">
     
     <style type="text/tailwindcss">
         @theme {
@@ -157,13 +158,13 @@
         <div class="flex items-center gap-3 group cursor-pointer" onclick="window.location.href='index.html'">
             <span class="text-xl font-bold tracking-wider text-white brand-font">SYNAPSE</span>
         </div>
-        <div class="flex items-center gap-8 text-sm font-medium text-neutral-400">
+        <div class="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-400">
             <a href="index.html" class="hover:text-white transition-colors">Home</a>
             <a href="features.html" class="hover:text-white transition-colors">Features</a>
-                <a href="global-ranking.html" class="hover:text-white transition-colors">Global Ranking</a>
+            <a href="global-ranking.html" class="hover:text-white transition-colors">Global Ranking</a>
         </div>
-        <div style="color: #94a3b8; font-size: 0.8rem; font-family: 'Fira Code', monospace; display: flex; align-items: center; gap: 8px;" id="nav-user-email">
-            <i class="fa-solid fa-user-circle text-sm"></i> user@synapse.com
+        <div class="flex items-center gap-4" id="nav-auth-container">
+            <button onclick="window.location.href='auth.html'" class="text-sm font-medium text-neutral-300 hover:text-white transition-colors cursor-pointer">Log In</button>
         </div>
     </nav>
     <!-- Auth Guard: redirect to login if not authenticated -->
@@ -201,9 +202,9 @@
                     <option value="cpp">C++</option>
                 </select>
                 <div class="code-actions">
-                    <button class="btn-run" onclick="analyzeComplexity()" style="background: rgba(167, 139, 250, 0.1); color: #c4b5fd; border: 1px solid rgba(167, 139, 250, 0.2);"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Complexity</button>
-                    <button class="btn-run" onclick="runCode()"><i class="fa-solid fa-play"></i> Run Code</button>
-                    <button class="btn-submit" onclick="submitCode()"><i class="fa-solid fa-cloud-arrow-up"></i> Submit to Database</button>
+                    <button class="btn-run" id="btn-analyze" style="background: rgba(167, 139, 250, 0.1); color: #c4b5fd; border: 1px solid rgba(167, 139, 250, 0.2);"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Complexity</button>
+                    <button class="btn-run" id="btn-run-code"><i class="fa-solid fa-play"></i> Run Code</button>
+                    <button class="btn-submit" id="btn-submit-code"><i class="fa-solid fa-cloud-arrow-up"></i> Submit to Database</button>
                 </div>
             </div>
             
@@ -216,10 +217,38 @@
                     <span>Console Output</span>
                     <span id="terminal-status" class="status-badge status-idle">Ready</span>
                 </div>
-                <div class="terminal-body" id="terminal-out">> Write your code and press Run to compile via the Spring Boot Server!</div>
+                <div class="terminal-body" id="terminal-out">> Write your code and press Run to compile via the CodePrep Sandbox Server!</div>
             </div>
         </div>
     </div>
+
+    <!-- Global error tracking to catch any script load/compilation issues early -->
+    <script>
+        window.onerror = function (message, source, lineno, colno, error) {
+            const terminal = document.getElementById('terminal-out');
+            if (terminal) {
+                terminal.innerText = "[Browser Script Error]\n" + message + "\nLine: " + lineno + " Column: " + colno + "\nSource: " + source;
+            }
+            const statusBadge = document.getElementById('terminal-status');
+            if (statusBadge) {
+                statusBadge.className = 'status-badge status-error';
+                statusBadge.innerText = 'Script Error';
+            }
+            return false;
+        };
+
+        window.addEventListener('unhandledrejection', function (event) {
+            const terminal = document.getElementById('terminal-out');
+            if (terminal) {
+                terminal.innerText = "[Unhandled Promise Rejection]\n" + event.reason;
+            }
+            const statusBadge = document.getElementById('terminal-status');
+            if (statusBadge) {
+                statusBadge.className = 'status-badge status-error';
+                statusBadge.innerText = 'Promise Error';
+            }
+        });
+    </script>
 
     <script src="js/descriptions.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
@@ -239,7 +268,7 @@
         document.getElementById('desc-content').innerHTML = `
             <p style="color: #cbd5e1; line-height: 1.6; margin-bottom: 24px; font-size: 0.95rem;">${descHTML}</p>
             <div style="background: rgba(201, 123, 61, 0.05); border: 1px solid rgba(201, 123, 61, 0.15); padding: 12px; border-radius: 8px; font-size: 0.85rem; color: #fdba74;">
-                <i class="fa-solid fa-circle-info"></i> Note: CodePrep uses Spring Boot to compile code natively. Ensure you use <code>System.out.println()</code> to print your final output!
+                <i class="fa-solid fa-circle-info"></i> Note: CodePrep uses a secure backend sandbox to compile code natively. Ensure you use <code>System.out.println()</code> to print your final output!
             </div>
         `;
 
@@ -308,23 +337,28 @@
             editor.setValue(boilerplates[lang]);
         }
 
-        // Communication to Spring Boot Backend API
+        // Communication to CodePrep Sandbox Backend API
         async function executeCodeOnServer(submitMode) {
             const terminal = document.getElementById('terminal-out');
             const statusBadge = document.getElementById('terminal-status');
             
-            const code = editor.getValue();
-            const lang = document.getElementById('lang-selector').value;
-            
-            terminal.innerText = "Compiling and Executing via Spring Boot backend...\nPlease wait...";
-            statusBadge.className = 'status-badge status-idle';
-            statusBadge.innerText = 'Compiling...';
-
             try {
+                if (!editor) {
+                    throw new Error("Monaco Editor is still initializing. Please wait a moment and click Run again!");
+                }
+                
+                const code = editor.getValue();
+                const lang = document.getElementById('lang-selector').value;
+                
+                terminal.innerText = "Compiling and Executing via Sandbox backend...\nPlease wait...";
+                statusBadge.className = 'status-badge status-idle';
+                statusBadge.innerText = 'Compiling...';
+
                 const backendUrl = (() => {
                     const { protocol, hostname, port, origin } = window.location;
                     const isLocal = protocol === 'file:' || hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]' || hostname.startsWith('192.168.') || hostname.startsWith('10.') || hostname.startsWith('172.');
-                    return isLocal ? (port === '5000' ? origin : `http://${hostname === 'localhost' || hostname === '[::1]' || protocol === 'file:' ? '127.0.0.1' : hostname}:5000`) : origin;
+                    if (isLocal) return port === '5000' ? origin : `http://${hostname === 'localhost' || hostname === '[::1]' || protocol === 'file:' ? '127.0.0.1' : hostname}:5000`;
+                    return localStorage.getItem('synapse_backend_url') || 'https://synapse-ai-hackathon.onrender.com';
                 })();
 
                 const response = await fetch(`${backendUrl}/api/run-code`, {
@@ -355,7 +389,12 @@
                 if (data.status.includes('Success')) {
                     statusBadge.className = 'status-badge status-success';
                     if (submitMode) {
-                        terminal.innerText += "\n\n[SUCCESS] Saved submission entry #" + data.id + " to MySQL Database successfully!";
+                        terminal.innerText += "\n\n[SUCCESS] Saved submission entry #" + data.id + " to MongoDB successfully!";
+                        
+                        // Award XP
+                        if (typeof awardXP === 'function') {
+                            awardXP('dsa_solve');
+                        }
                         
                         // Fire Confetti!
                         var duration = 3000;
@@ -369,7 +408,7 @@
                 } else {
                     statusBadge.className = 'status-badge status-error';
                     if (submitMode) {
-                        terminal.innerText += "\n\n[INFO] Saving failed attempt entry #" + data.id + " to MySQL Database for analytics.";
+                        terminal.innerText += "\n\n[INFO] Saving failed attempt entry #" + data.id + " to MongoDB for analytics.";
                     }
                 }
 
@@ -467,10 +506,27 @@
                 setTimeout(() => toast.remove(), 300);
             }, 6000);
         }
+
+        // Bind events directly since DOM elements are defined above the script block
+        (function() {
+            const btnRun = document.getElementById('btn-run-code');
+            if (btnRun) {
+                btnRun.addEventListener('click', runCode);
+            }
+            const btnSubmit = document.getElementById('btn-submit-code');
+            if (btnSubmit) {
+                btnSubmit.addEventListener('click', submitCode);
+            }
+            const btnAnalyze = document.getElementById('btn-analyze');
+            if (btnAnalyze) {
+                btnAnalyze.addEventListener('click', analyzeComplexity);
+            }
+        })();
     </script>
     <style>
         @keyframes fadeIn { from { opacity:0; transform:translateY(10px) translateX(-50%); } to { opacity:1; transform:translateY(0) translateX(-50%); } }
         @keyframes fadeOut { from { opacity:1; transform:translateY(0) translateX(-50%); } to { opacity:0; transform:translateY(10px) translateX(-50%); } }
     </style>
+    <script src="js/navbar-auth.js"></script>
 </body>
 </html>

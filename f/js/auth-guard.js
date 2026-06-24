@@ -44,13 +44,13 @@
                 : 'U';
             container.innerHTML = `
                 <div class="flex items-center gap-3">
-                    <div onclick="window.location.href='profile.html'"
+                    <div onclick="window.location.href='analytics.html'"
                         class="w-8 h-8 rounded-full bg-brand-orange/20 border border-brand-orange/40 hover:border-brand-orange
                                hover:bg-brand-orange/35 flex items-center justify-center text-brand-orange text-xs font-bold
                                font-mono cursor-pointer transition-all" title="View Profile">
                         ${initials}
                     </div>
-                    <span onclick="window.location.href='profile.html'"
+                    <span onclick="window.location.href='analytics.html'"
                         class="text-xs text-neutral-300 hover:text-white font-semibold hidden sm:inline cursor-pointer transition-all"
                         title="View Profile">${user.name || 'User'}</span>
                     <button onclick="synapseAuth.logout()"
@@ -65,6 +65,20 @@
     // ── Auto-render the navbar as soon as the DOM is ready ───────────────────
     function autoRenderNav() {
         window.synapseAuth.renderNav('nav-auth-container');
+        centerNavbarLinks();
+    }
+
+    function centerNavbarLinks() {
+        const nav = document.querySelector('nav');
+        if (!nav) return;
+        const navContainer = nav.querySelector('.max-w-7xl');
+        if (!navContainer) return;
+        const linksContainer = navContainer.querySelector('.hidden.md\\:flex');
+        if (!linksContainer) return;
+        
+        navContainer.classList.add('relative');
+        linksContainer.classList.remove('hidden', 'md:flex');
+        linksContainer.classList.add('hidden', 'md:absolute', 'md:left-1/2', 'md:-translate-x-1/2', 'md:flex');
     }
 
     if (document.readyState === 'loading') {

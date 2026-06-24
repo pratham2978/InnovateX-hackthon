@@ -21,6 +21,19 @@ const UserSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  xp: {
+    type: Number,
+    default: 0
+  },
+  streak: {
+    type: Number,
+    default: 0
+  },
+  role: {
+    type: String,
+    enum: ["student", "admin"],
+    default: "student"
   }
 });
 

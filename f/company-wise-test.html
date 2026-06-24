@@ -1957,9 +1957,20 @@
 
     function matchesRole(q, role) {
       const roleText = [role.id, role.label, role.sub].join(' ').toLowerCase();
-      const roleMatches = q.role_relevance.some(r => roleText.includes(r.toLowerCase()));
-      const domainMatches = q.domain && q.domain.toLowerCase().includes(role.id);
-      return roleMatches || domainMatches || (q.topic && q.topic.toLowerCase().includes(role.id));
+      // Check if any role_relevance keyword appears in roleText OR roleText words appear in role_relevance
+      const roleMatches = q.role_relevance.some(r => {
+        const rLow = r.toLowerCase();
+        return roleText.includes(rLow) || rLow.includes(role.id);
+      });
+      const domainMatches = q.domain && (
+        q.domain.toLowerCase().includes(role.id) ||
+        role.id.includes(q.domain.toLowerCase().substring(0, 4))
+      );
+      const topicMatches = q.topic && (
+        q.topic.toLowerCase().includes(role.id) ||
+        roleText.includes(q.topic.toLowerCase())
+      );
+      return roleMatches || domainMatches || topicMatches;
     }
 
     function selectQuestionsFromBank(questions, role, companies, difficulty, count) {
@@ -1967,9 +1978,11 @@
 
       const scored = questions.map(q => {
         let score = 0;
-        if (q.company_relevance.some(c => companySet.has(c.toLowerCase()))) score += 50;
+        if (q.company_relevance.some(c => companySet.has(c.toLowerCase()) || c === 'All')) score += 50;
         if (matchesRole(q, role)) score += 30;
         if (difficulty !== 'mixed' && q.difficulty.toLowerCase() === difficulty.toLowerCase()) score += 20;
+        // Give a base score so ALL questions are eligible for fallback
+        score += 1;
         return { q, score };
       });
 
@@ -1977,29 +1990,12 @@
 
       const selected = [];
       const seen = new Set();
+      // Primary pass: take best-scored unique questions
       for (const item of scored) {
         if (selected.length >= count) break;
-        if (item.score <= 0) continue;
         if (seen.has(item.q.id)) continue;
         selected.push(item.q);
         seen.add(item.q.id);
-      }
-
-      if (selected.length < count) {
-        const remaining = questions.filter(q => !seen.has(q.id));
-        remaining.sort((a, b) => {
-          if (difficulty !== 'mixed') {
-            const da = a.difficulty.toLowerCase() === difficulty.toLowerCase() ? -1 : 1;
-            const db = b.difficulty.toLowerCase() === difficulty.toLowerCase() ? -1 : 1;
-            if (da !== db) return da - db;
-          }
-          return (a.topic || '').localeCompare(b.topic || '');
-        });
-        for (const q of remaining) {
-          if (selected.length >= count) break;
-          selected.push(q);
-          seen.add(q.id);
-        }
       }
 
       return selected.slice(0, count).map((q, idx) => ({
@@ -2165,14 +2161,15 @@
           const letter = letters[oi];
           let cls = 'option-item';
           const userAns = typeof state.answers[idx] === 'string' ? state.answers[idx].toUpperCase().trim() : undefined;
-          const correctAns = q.correct.toUpperCase().trim();
+          const correctAns = (q.correct || '').toUpperCase().trim();
           const answered = userAns !== undefined;
-          if (answered || state.revealed.has(idx)) {
+          const isRevealed = state.revealed.has(idx);
+          if (answered || isRevealed) {
             if (letter === correctAns) cls += ' correct';
-            else if (letter === userAns) cls += ' wrong';
-          } else if (userAns === letter) {
-            cls += ' selected';
+            else if (answered && letter === userAns) cls += ' wrong';
           }
+          // Show pending selection highlight (before lock-in)
+          // Note: answers are locked immediately on click, so no pending state needed
           return `<div class="${cls}" onclick="selectAnswer(${idx}, '${letter}')">
         <div class="option-label">${letter}</div>
         <div class="option-text">${opt.replace(/^[A-D]\.\s*/, '')}</div>

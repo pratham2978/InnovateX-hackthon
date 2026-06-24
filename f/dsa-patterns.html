@@ -428,16 +428,58 @@
         animate();
 
         // Calculate progress for each card
-        document.addEventListener("DOMContentLoaded", () => {
+        document.addEventListener("DOMContentLoaded", async () => {
+            const SYNAPSE_BACKEND = (() => {
+                const { protocol, hostname, port, origin } = window.location;
+                const isLocal = protocol === 'file:' || hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]' || hostname.startsWith('192.168.') || hostname.startsWith('10.') || hostname.startsWith('172.');
+                if (isLocal) return port === '5000' ? origin : `http://${hostname === 'localhost' || hostname === '[::1]' || protocol === 'file:' ? '127.0.0.1' : hostname}:5000`;
+                return localStorage.getItem('synapse_backend_url') || 'https://synapse-ai-hackathon.onrender.com';
+            })();
+
+            let activeTopics = null;
+            try {
+                const res = await fetch(`${SYNAPSE_BACKEND}/api/dsa/topics`);
+                const data = await res.json();
+                if (data.success && data.topics) {
+                    activeTopics = data.topics;
+                }
+            } catch (e) {
+                console.warn("Could not fetch dynamic topics from server, using static fallback.");
+            }
+
+            if (!activeTopics && typeof topicsData !== 'undefined') {
+                activeTopics = topicsData;
+            }
+
             const pcts = document.querySelectorAll('.progress-pct');
             pcts.forEach(span => {
                 const topicId = span.getAttribute('data-topic');
-                if (topicId && typeof topicsData !== 'undefined' && topicsData[topicId]) {
-                    const topic = topicsData[topicId];
+                if (topicId && activeTopics && activeTopics[topicId]) {
+                    const topic = activeTopics[topicId];
                     let totalProblems = 0;
+                    let easyCount = 0;
+                    let medCount = 0;
+                    let hardCount = 0;
+
                     if (topic && topic.difficulties) {
                         for (let diff in topic.difficulties) {
-                            totalProblems += topic.difficulties[diff].length;
+                            const list = topic.difficulties[diff] || [];
+                            totalProblems += list.length;
+                            list.forEach(q => {
+                                const d = (q.diff || 'Easy').toLowerCase();
+                                if (d === 'easy') easyCount++;
+                                else if (d === 'medium' || d === 'med') medCount++;
+                                else if (d === 'hard') hardCount++;
+                            });
+                        }
+                    }
+
+                    // Update counts text in card description
+                    const card = span.closest('.dsa-card');
+                    if (card) {
+                        const desc = card.querySelector('p.text-neutral-400');
+                        if (desc) {
+                            desc.innerHTML = `${easyCount} Easy &bull; ${medCount} Med &bull; ${hardCount} Hard`;
                         }
                     }
                     
@@ -470,10 +512,10 @@
                     const initials = user.name ? user.name.split(" ").map(n => n.charAt(0)).join("").toUpperCase().slice(0, 2) : "U";
                     container.innerHTML = `
                         <div class="flex items-center gap-3">
-                            <div onclick="window.location.href='profile.html'" class="w-8 h-8 rounded-full bg-brand-orange/20 border border-brand-orange/40 hover:border-brand-orange hover:bg-brand-orange/35 flex items-center justify-center text-brand-orange text-xs font-bold font-mono cursor-pointer transition-all" title="View Profile">
+                            <div onclick="window.location.href='analytics.html'" class="w-8 h-8 rounded-full bg-brand-orange/20 border border-brand-orange/40 hover:border-brand-orange hover:bg-brand-orange/35 flex items-center justify-center text-brand-orange text-xs font-bold font-mono cursor-pointer transition-all" title="View Profile">
                                 ${initials}
                             </div>
-                            <span onclick="window.location.href='profile.html'" class="text-xs text-neutral-300 hover:text-white font-semibold hidden sm:inline cursor-pointer transition-all" title="View Profile">${user.name || 'User'}</span>
+                            <span onclick="window.location.href='analytics.html'" class="text-xs text-neutral-300 hover:text-white font-semibold hidden sm:inline cursor-pointer transition-all" title="View Profile">${user.name || 'User'}</span>
                             <button onclick="handleLogout()" class="text-xs font-semibold px-3 py-1.5 border border-brand-border rounded-lg text-neutral-400 hover:text-white hover:border-neutral-500 transition-all cursor-pointer">
                                 Log Out
                             </button>

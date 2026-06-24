@@ -79,7 +79,7 @@ async function sendMessage() {
       const { protocol, hostname } = window.location;
       const isLocal = protocol === 'file:' || hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
       if (isLocal) return 'http://localhost:5000';
-      return window.location.origin;
+      return localStorage.getItem('synapse_backend_url') || 'https://synapse-ai-hackathon.onrender.com';
     })();
     const res = await fetch(`${backendUrl}/chat`, {
       method: "POST",

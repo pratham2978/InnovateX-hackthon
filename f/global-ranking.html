@@ -111,12 +111,12 @@
 
     <!-- Navigation Header -->
     <nav class="sticky top-0 z-50 w-full px-6 py-4 border-b border-brand-border bg-brand-bg/75 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <div class="max-w-7xl mx-auto flex items-center justify-between relative">
             <div class="flex items-center gap-3 group cursor-pointer" onclick="window.location.href='index.html'">
                 <span class="text-xl font-bold tracking-wider text-white brand-font">SYNAPSE</span>
             </div>
             
-            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-400">
+            <div class="hidden md:flex md:absolute md:left-1/2 md:-translate-x-1/2 items-center gap-8 text-sm font-medium text-neutral-400">
                 <a href="index.html" class="hover:text-white transition-colors">Home</a>
                 <a href="features.html" class="hover:text-white transition-colors">Features</a>
                 <a href="global-ranking.html" class="text-white font-bold transition-colors">Global Ranking</a>
@@ -376,7 +376,7 @@
             const { protocol, hostname } = window.location;
             const isLocal = protocol === 'file:' || hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
             if (isLocal) return 'http://localhost:5000';
-            return window.location.origin;
+            return localStorage.getItem('synapse_backend_url') || 'https://synapse-ai-hackathon.onrender.com';
         })();
 
         // ── Neural Canvas Background ─────────────────────────────────────────
@@ -532,8 +532,8 @@
                     : 'U';
                 container.innerHTML = `
                     <div class="flex items-center gap-3">
-                        <div onclick="window.location.href='profile.html'" class="w-8 h-8 rounded-full bg-brand-orange/20 border border-brand-orange/40 hover:border-brand-orange flex items-center justify-center text-brand-orange text-xs font-bold font-mono cursor-pointer transition-all">${initials}</div>
-                        <span onclick="window.location.href='profile.html'" class="text-xs text-neutral-300 hover:text-white font-semibold hidden sm:inline cursor-pointer">${currentUser.name || 'User'}</span>
+                        <div onclick="window.location.href='analytics.html'" class="w-8 h-8 rounded-full bg-brand-orange/20 border border-brand-orange/40 hover:border-brand-orange flex items-center justify-center text-brand-orange text-xs font-bold font-mono cursor-pointer transition-all">${initials}</div>
+                        <span onclick="window.location.href='analytics.html'" class="text-xs text-neutral-300 hover:text-white font-semibold hidden sm:inline cursor-pointer">${currentUser.name || 'User'}</span>
                         <button onclick="handleLogout()" class="text-xs font-semibold px-3 py-1.5 border border-brand-border rounded-lg text-neutral-400 hover:text-white hover:border-neutral-500 transition-all cursor-pointer">Log Out</button>
                     </div>`;
             }

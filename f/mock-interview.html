@@ -7,6 +7,7 @@
     <!-- Tailwind CSS v4 via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/shared.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;850&family=Plus+Jakarta+Sans:wght@700;800&family=Fira+Code:wght@500&display=swap" rel="stylesheet">
@@ -446,6 +447,9 @@
             if (currentQIndex >= currentAiQuestions.length - 1) {
                 document.getElementById('btn-next-q').classList.add('hidden');
                 document.getElementById('ai-question-text').innerText = '🎉 Interview complete! Great effort. Review the feedback above and keep practicing!';
+                if (typeof awardXP === 'function') {
+                    awardXP('mock_interview');
+                }
             }
         }
 
@@ -458,180 +462,8 @@
             document.getElementById('ai-modal').classList.add('hidden');
             document.getElementById('ai-modal').classList.remove('flex');
         }
-
-        // ==========================================
-        // DYNAMIC NEURAL CANVAS BACKGROUND (SYNAPSE)
-        // ==========================================
-        const canvas = document.getElementById('canvas-synapse');
-        const ctx = canvas.getContext('2d');
-        let width = canvas.width = window.innerWidth;
-        let height = canvas.height = window.innerHeight;
-
-        const particles = [];
-        const particleCount = 65;
-        let mouse = { x: null, y: null, active: false };
-        let glowX = width / 2;
-        let glowY = height / 2;
-
-        window.addEventListener('mousemove', (e) => {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-            mouse.active = true;
-        });
-
-        window.addEventListener('mouseleave', () => {
-            mouse.active = false;
-        });
-
-        window.addEventListener('resize', () => {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-        });
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 0.55;
-                this.vy = (Math.random() - 0.5) * 0.55;
-                this.radius = Math.random() * 2.2 + 1;
-            }
-
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-
-                if (mouse.active) {
-                    const dx = mouse.x - this.x;
-                    const dy = mouse.y - this.y;
-                    const distance = Math.hypot(dx, dy);
-                    if (distance < 170) {
-                        const force = (170 - distance) / 170;
-                        const angle = Math.atan2(dy, dx);
-                        this.x -= Math.cos(angle) * force * 2.0;
-                        this.y -= Math.sin(angle) * force * 2.0;
-                    }
-                }
-
-                if (this.x < 0 || this.x > width) this.vx = -this.vx;
-                if (this.y < 0 || this.y > height) this.vy = -this.vy;
-            }
-
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius * 3.5, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(201, 123, 61, 0.28)`; // Orange theme glow
-                ctx.fill();
-
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `#FFFFFF`;
-                ctx.fill();
-            }
-        }
-
-        for (let i = 0; i < particleCount; i++) {
-            particles.push(new Particle());
-        }
-
-        function animate() {
-            ctx.clearRect(0, 0, width, height);
-
-            const glow1 = document.getElementById('glow-1');
-            if (glow1) {
-                let targetX = mouse.active ? mouse.x : width / 2;
-                let targetY = mouse.active ? mouse.y : height / 2;
-                glowX += (targetX - glowX) * 0.04;
-                glowY += (targetY - glowY) * 0.04;
-                glow1.style.left = `${glowX - 300}px`;
-                glow1.style.top = `${glowY - 300}px`;
-            }
-
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].update();
-                particles[i].draw();
-
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dist = Math.hypot(particles[i].x - particles[j].x, particles[i].y - particles[j].y);
-                    if (dist < 125) {
-                        const alpha = (1 - dist / 125) * 0.55;
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = `rgba(201, 123, 61, ${alpha * 0.35})`;
-                        ctx.lineWidth = 3.5;
-                        ctx.stroke();
-
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = `rgba(201, 123, 61, ${alpha})`;
-                        ctx.lineWidth = 1.0;
-                        ctx.stroke();
-                    }
-                }
-
-                if (mouse.active) {
-                    const distToMouse = Math.hypot(particles[i].x - mouse.x, particles[i].y - mouse.y);
-                    if (distToMouse < 170) {
-                        const alpha = (1 - distToMouse / 170) * 0.75;
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(mouse.x, mouse.y);
-                        ctx.strokeStyle = `rgba(201, 123, 61, ${alpha * 0.35})`;
-                        ctx.lineWidth = 5.0;
-                        ctx.stroke();
-
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(mouse.x, mouse.y);
-                        ctx.strokeStyle = `rgba(201, 123, 61, ${alpha})`;
-                        ctx.lineWidth = 1.5;
-                        ctx.stroke();
-                    }
-                }
-            }
-            requestAnimationFrame(animate);
-        }
-        animate();
-
-        // Sync Navbar Auth State
-        function syncNavbarAuth() {
-            const token = localStorage.getItem("synapse_token");
-            const userStr = localStorage.getItem("synapse_user");
-            const container = document.getElementById("nav-auth-container");
-            
-            if (token && userStr && container) {
-                try {
-                    const user = JSON.parse(userStr);
-                    const initials = user.name ? user.name.split(" ").map(n => n.charAt(0)).join("").toUpperCase().slice(0, 2) : "U";
-                    container.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <div onclick="window.location.href='profile.html'" class="w-8 h-8 rounded-full bg-brand-orange/20 border border-brand-orange/40 hover:border-brand-orange hover:bg-brand-orange/35 flex items-center justify-center text-brand-orange text-xs font-bold font-mono cursor-pointer transition-all" title="View Profile">
-                                ${initials}
-                            </div>
-                            <span onclick="window.location.href='profile.html'" class="text-xs text-neutral-300 hover:text-white font-semibold hidden sm:inline cursor-pointer transition-all" title="View Profile">${user.name || 'User'}</span>
-                            <button onclick="handleLogout()" class="text-xs font-semibold px-3 py-1.5 border border-brand-border rounded-lg text-neutral-400 hover:text-white hover:border-neutral-500 transition-all cursor-pointer">
-                                Log Out
-                            </button>
-                        </div>
-                        <a href="interview.html" class="text-xs font-semibold px-4 py-2 border border-brand-border rounded-lg text-neutral-300 hover:text-white hover:border-neutral-500 transition-all">
-                            <i class="fa-solid fa-arrow-left mr-1"></i> Back to Interview Prep
-                        </a>
-                    `;
-                } catch (e) {
-                    console.error("Auth sync error:", e);
-                }
-            }
-        }
-
-        function handleLogout() {
-            localStorage.removeItem("synapse_token");
-            localStorage.removeItem("synapse_user");
-            window.location.reload();
-        }
-
-        window.addEventListener('DOMContentLoaded', syncNavbarAuth);
     </script>
+    <script src="js/synapse-canvas.js"></script>
+    <script src="js/navbar-auth.js"></script>
 </body>
 </html>

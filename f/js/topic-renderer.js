@@ -5,10 +5,34 @@
  * All state is persisted in localStorage per topic.
  */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const activeTopicId = urlParams.get('id') || 'arrays';
-    const topicData = topicsData[activeTopicId];
+    
+    let topicData = null;
+    const SYNAPSE_BACKEND = (() => {
+        const { protocol, hostname, port, origin } = window.location;
+        const isLocal = protocol === 'file:' || hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]' || hostname.startsWith('192.168.') || hostname.startsWith('10.') || hostname.startsWith('172.');
+        if (isLocal) return port === '5000' ? origin : `http://${hostname === 'localhost' || hostname === '[::1]' || protocol === 'file:' ? '127.0.0.1' : hostname}:5000`;
+        return localStorage.getItem('synapse_backend_url') || 'https://synapse-ai-hackathon.onrender.com';
+    })();
+
+    try {
+        const res = await fetch(`${SYNAPSE_BACKEND}/api/dsa/topics`);
+        const data = await res.json();
+        if (data.success && data.topics && data.topics[activeTopicId]) {
+            topicData = data.topics[activeTopicId];
+            console.log("Loaded topic data from backend API for:", activeTopicId);
+        }
+    } catch (e) {
+        console.warn("Could not load topics from backend. Using static fallback.", e);
+    }
+
+    if (!topicData) {
+        if (typeof topicsData !== 'undefined' && topicsData[activeTopicId]) {
+            topicData = topicsData[activeTopicId];
+        }
+    }
 
     if (!topicData) {
         document.querySelector('.q-title').innerText = 'Topic Not Found';

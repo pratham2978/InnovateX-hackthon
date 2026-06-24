@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNAPSE — Admin Dashboard</title>
+    <!-- Tailwind CSS v4 via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-brand-bg: #0A0A0A;
+            --color-brand-card: #111111;
+            --color-brand-text: #F5F5F5;
+            --color-brand-red: #D90429;
+            --color-brand-red-light: #E63946;
+            --color-brand-orange: #C97B3D;
+            --color-brand-orange-light: #D08B4E;
+            --color-brand-border: #222222;
+            
+            --font-display: 'Plus Jakarta Sans', sans-serif;
+            --font-sans: 'Inter', sans-serif;
+        }
+    </style>
+
+    <style>
+        :root {
+            --accent-color: #C97B3D;
+            --accent-color-rgb: 201, 123, 61;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            color: #F5F5F5;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, h4, .brand-font {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        
+        /* Grid background pattern */
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: -30;
+            background-size: 50px 50px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+        }
+
+        /* Glassmorphism card styling */
+        .glass-panel {
+            background: rgba(13, 13, 13, 0.7);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-panel:hover {
+            border-color: rgba(201, 123, 61, 0.2);
+        }
+        
+        /* Ambient Glowing Backdrops */
+        .glow-bg {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(130px);
+            opacity: 0.35;
+            transition: opacity 0.8s, transform 0.8s;
+        }
+
+        /* Topic list item styling */
+        .topic-item {
+            border-left: 2px solid transparent;
+            transition: all 0.25s ease;
+        }
+        .topic-item.active {
+            border-left-color: #C97B3D;
+            background: rgba(201, 123, 61, 0.06);
+            color: #fff !important;
+        }
+
+        /* Form input styling */
+        .admin-input {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 0.875rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .admin-input:focus {
+            border-color: #C97B3D;
+            background: rgba(255, 255, 255, 0.04);
+            box-shadow: 0 0 10px rgba(201, 123, 61, 0.15);
+        }
+
+        .badge-diff {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .badge-diff.easy { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .badge-diff.medium { background: rgba(251, 191, 36, 0.1); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.2); }
+        .badge-diff.hard { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+    </style>
+</head>
+<body class="relative min-h-screen bg-brand-bg text-brand-text selection:bg-brand-orange selection:text-white" id="app-body">
+
+    <!-- Grid Layout Background -->
+    <div class="grid-overlay"></div>
+
+    <!-- Interactive Neural Network Background Canvas -->
+    <canvas id="canvas-synapse" class="fixed inset-0 w-full h-full -z-20 pointer-events-none opacity-25"></canvas>
+
+    <!-- Ambient Glow Element -->
+    <div id="glow-1" class="glow-bg w-[600px] h-[600px] top-[10%] left-[20%] bg-brand-orange/40"></div>
+
+    <!-- Navigation Header -->
+    <nav class="sticky top-0 z-50 w-full px-6 py-4 border-b border-brand-border bg-brand-bg/60 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3 group cursor-pointer" onclick="window.location.href='index.html'">
+                <span class="text-xl font-bold tracking-wider text-white brand-font">SYNAPSE</span>
+                <span class="text-[9px] font-bold px-2 py-0.5 rounded bg-brand-orange/20 text-brand-orange border border-brand-orange/30">ADMIN</span>
+            </div>
+            
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-400">
+                <a href="index.html" class="hover:text-white transition-colors">Home</a>
+             <a href="features.html" class="hover:text-white transition-colors">Features</a>
+                <a href="dsa-patterns.html" class="hover:text-white transition-colors">DSA Patterns</a>
+            </div>
+
+            <div class="flex items-center gap-4" id="nav-auth-container">
+                <button onclick="window.location.href='auth.html'" class="text-xs font-semibold px-4 py-2 border border-brand-border rounded-lg text-neutral-300 hover:text-white hover:border-neutral-500 transition-all cursor-pointer">
+                    Log In
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="py-12 px-6 max-w-7xl mx-auto relative z-10" id="main-content">
+        <!-- Access Denied Card (Initially Shown, Hidden if Authorized) -->
+        <div id="auth-gate-card" class="glass-panel max-w-md mx-auto rounded-2xl p-8 text-center mt-20">
+            <div class="w-16 h-16 rounded-full bg-brand-red/10 border border-brand-red/30 flex items-center justify-center text-brand-red text-2xl mx-auto mb-6">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h2 class="text-xl font-bold text-white mb-2">Access Restricted</h2>
+            <p class="text-neutral-400 text-xs font-light leading-relaxed mb-6">
+                This page is only accessible to authenticated administrators. Please log in as an administrator to access the question bank settings.
+            </p>
+            <div class="flex flex-col gap-3">
+                <button onclick="window.location.href='auth.html'" class="w-full py-2.5 rounded-lg bg-brand-orange hover:bg-brand-orange-light text-black text-xs font-bold transition-all cursor-pointer">
+                    Go to Login Page
+                </button>
+                <p class="text-[10px] text-neutral-500 text-center">Login with your admin credentials to access the panel</p>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard Tabs Header (Shown when authorized) -->
+        <div id="admin-tabs-header" class="hidden flex border-b border-brand-border mb-8 gap-6 text-sm font-semibold">
+            <button onclick="switchAdminTab('questions')" id="tab-btn-questions" class="pb-3 border-b-2 border-brand-orange text-white cursor-pointer transition-all">
+                <i class="fa-solid fa-list-check mr-1.5 text-brand-orange"></i> Question Manager
+            </button>
+            <button onclick="switchAdminTab('feedback')" id="tab-btn-feedback" class="pb-3 border-b-2 border-transparent text-neutral-400 hover:text-white cursor-pointer transition-all">
+                <i class="fa-solid fa-comments mr-1.5"></i> Student Feedback
+            </button>
+            <button onclick="switchAdminTab('health')" id="tab-btn-health" class="pb-3 border-b-2 border-transparent text-neutral-400 hover:text-white cursor-pointer transition-all">
+                <i class="fa-solid fa-heart-pulse mr-1.5"></i> System Health
+            </button>
+        </div>
+
+        <!-- Authorized Admin Panel Layout (Tab 1) -->
+        <div id="questions-panel-layout" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-8 mt-4">
+            <!-- Left Side: Patterns List & Add Form -->
+            <div class="lg:col-span-4 flex flex-col gap-6">
+                <!-- Select Pattern Card -->
+                <div class="glass-panel rounded-2xl p-6">
+                    <h3 class="text-sm font-bold text-neutral-300 uppercase tracking-wider mb-4">
+                        <i class="fa-solid fa-list-check text-brand-orange mr-1.5"></i> Select DSA Pattern
+                    </h3>
+                    <div class="flex flex-col gap-1 max-h-[300px] overflow-y-auto pr-1" id="topics-list-container">
+                        <!-- Rendered topics -->
+                    </div>
+                </div>
+
+                <!-- Add Question Form Card -->
+                <div class="glass-panel rounded-2xl p-6">
+                    <h3 class="text-sm font-bold text-neutral-300 uppercase tracking-wider mb-4">
+                        <i class="fa-solid fa-square-plus text-brand-orange mr-1.5"></i> Add Question
+                    </h3>
+                    <form id="add-question-form" onsubmit="handleAddQuestion(event)" class="flex flex-col gap-4">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-[10px] uppercase font-bold text-neutral-400">Question Title</label>
+                            <input type="text" id="q-title-input" class="admin-input" placeholder="e.g. Two Sum" required>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[10px] uppercase font-bold text-neutral-400">Group Section</label>
+                                <select id="q-group-select" class="admin-input">
+                                    <option value="Basic">Basic</option>
+                                    <option value="Easy">Easy</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Hard">Hard</option>
+                                </select>
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[10px] uppercase font-bold text-neutral-400">Difficulty Badge</label>
+                                <select id="q-diff-select" class="admin-input">
+                                    <option value="Easy">Easy</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Hard">Hard</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-[10px] uppercase font-bold text-neutral-400">Leetcode / Practice URL</label>
+                            <input type="text" id="q-url-input" class="admin-input" placeholder="e.g. https://leetcode.com/problems/..." value="#">
+                        </div>
+
+                        <div class="flex flex-col gap-2.5 mt-2 bg-neutral-900/40 p-3 rounded-lg border border-neutral-900">
+                            <span class="text-[9px] uppercase font-bold text-neutral-400 tracking-wider">Features Available</span>
+                            
+                            <label class="flex items-center gap-2 text-xs text-neutral-300 cursor-pointer select-none">
+                                <input type="checkbox" id="chk-vid" class="rounded border-neutral-800 text-brand-orange focus:ring-0">
+                                <span>Has YouTube Video Solution</span>
+                            </label>
+
+                            <label class="flex items-center gap-2 text-xs text-neutral-300 cursor-pointer select-none">
+                                <input type="checkbox" id="chk-doc" class="rounded border-neutral-800 text-brand-orange focus:ring-0">
+                                <span>Has Articles / Docs</span>
+                            </label>
+
+                            <label class="flex items-center gap-2 text-xs text-neutral-300 cursor-pointer select-none">
+                                <input type="checkbox" id="chk-prac" class="rounded border-neutral-800 text-brand-orange focus:ring-0" checked>
+                                <span>Enable Code Playground Solve</span>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="w-full py-2.5 rounded-lg bg-gradient-to-r from-brand-orange to-brand-orange-light text-black text-xs font-extrabold shadow-lg hover:brightness-110 transition-all cursor-pointer mt-2 flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-plus"></i> Add Question
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Side: Questions Lists & Stats -->
+            <div class="lg:col-span-8 flex flex-col gap-6">
+                <!-- Topic Profile Stats -->
+                <div class="glass-panel rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <span class="text-[10px] bg-brand-orange/10 border border-brand-orange/30 text-brand-orange font-bold uppercase tracking-wider px-3 py-1 rounded-full" id="pattern-badge">
+                            Pattern
+                        </span>
+                        <h2 class="text-2xl font-extrabold text-white mt-3" id="pattern-title">Arrays & Hashing</h2>
+                        <p class="text-neutral-400 text-xs font-light mt-1 max-w-xl leading-relaxed" id="pattern-subtitle">
+                            Loading pattern description...
+                        </p>
+                    </div>
+
+                    <div class="flex gap-4 items-center bg-neutral-900/60 p-4 rounded-xl border border-neutral-800/80">
+                        <div class="text-center px-2">
+                            <span class="block text-2xl font-bold font-mono text-white" id="stat-total-val">0</span>
+                            <span class="text-[9px] text-neutral-500 font-bold uppercase">Total</span>
+                        </div>
+                        <div class="w-px h-8 bg-neutral-800"></div>
+                        <div class="text-center px-2">
+                            <span class="block text-xs font-bold font-mono text-green-400" id="stat-easy-val">0</span>
+                            <span class="text-[9px] text-neutral-500 font-bold uppercase">Easy</span>
+                        </div>
+                        <div class="w-px h-8 bg-neutral-800"></div>
+                        <div class="text-center px-2">
+                            <span class="block text-xs font-bold font-mono text-amber-400" id="stat-med-val">0</span>
+                            <span class="text-[9px] text-neutral-500 font-bold uppercase">Med</span>
+                        </div>
+                        <div class="w-px h-8 bg-neutral-800"></div>
+                        <div class="text-center px-2">
+                            <span class="block text-xs font-bold font-mono text-rose-400" id="stat-hard-val">0</span>
+                            <span class="text-[9px] text-neutral-500 font-bold uppercase">Hard</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Questions List Card -->
+                <div class="glass-panel rounded-2xl p-6">
+                    <div class="flex justify-between items-center pb-4 border-b border-brand-border">
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wider">
+                            Questions Bank List
+                        </h3>
+                        <span class="text-[10px] text-neutral-500 font-medium">Click garbage icon to delete</span>
+                    </div>
+
+                    <div class="mt-4 space-y-6" id="questions-group-list">
+                        <!-- Rendered difficulty list blocks -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Authorized Feedback Panel Layout (Tab 2) -->
+        <div id="feedback-panel-layout" class="hidden flex flex-col gap-6 mt-4">
+            <!-- Feedback Header & Stats -->
+            <div class="glass-panel rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <span class="text-[10px] bg-[#C97B3D]/10 border border-[#C97B3D]/30 text-[#C97B3D] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+                        Feedback & Bug Dashboard
+                    </span>
+                    <h2 class="text-2xl font-extrabold text-white mt-3">Student Feedback Logs</h2>
+                    <p class="text-neutral-400 text-xs font-light mt-1 max-w-xl leading-relaxed">
+                        Review, resolve, or delete issues and feature suggestions submitted by students in real-time.
+                    </p>
+                </div>
+
+                <div class="flex gap-4 items-center bg-neutral-900/60 p-4 rounded-xl border border-neutral-800/80">
+                    <div class="text-center px-2">
+                        <span class="block text-2xl font-bold font-mono text-white" id="fb-total-val">0</span>
+                        <span class="text-[9px] text-neutral-500 font-bold uppercase">Total</span>
+                    </div>
+                    <div class="w-px h-8 bg-neutral-800"></div>
+                    <div class="text-center px-2">
+                        <span class="block text-xs font-bold font-mono text-rose-400" id="fb-bugs-val">0</span>
+                        <span class="text-[9px] text-neutral-500 font-bold uppercase">Bugs</span>
+                    </div>
+                    <div class="w-px h-8 bg-neutral-800"></div>
+                    <div class="text-center px-2">
+                        <span class="block text-xs font-bold font-mono text-purple-400" id="fb-features-val">0</span>
+                        <span class="text-[9px] text-neutral-500 font-bold uppercase">Features</span>
+                    </div>
+                    <div class="w-px h-8 bg-neutral-800"></div>
+                    <div class="text-center px-2">
+                        <span class="block text-xs font-bold font-mono text-amber-400" id="fb-open-val">0</span>
+                        <span class="text-[9px] text-neutral-500 font-bold uppercase">Open</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters and Logs List -->
+            <div class="glass-panel rounded-2xl p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-brand-border mb-6">
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider">
+                        Submitted Reports
+                    </h3>
+                    
+                    <!-- Filters -->
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div class="flex items-center gap-1.5 bg-neutral-900/85 px-3 py-1.5 rounded-lg border border-neutral-800">
+                            <span class="text-[9px] text-neutral-500 uppercase font-bold">Type:</span>
+                            <select id="fb-filter-type" onchange="renderFeedbacks()" class="bg-transparent text-xs text-neutral-300 font-medium border-0 focus:ring-0 outline-none pr-6 py-0.5 cursor-pointer">
+                                <option value="all">All Types</option>
+                                <option value="bug">Bugs</option>
+                                <option value="feedback">Feedback</option>
+                                <option value="feature">Features</option>
+                            </select>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 bg-neutral-900/85 px-3 py-1.5 rounded-lg border border-neutral-800">
+                            <span class="text-[9px] text-neutral-500 uppercase font-bold">Status:</span>
+                            <select id="fb-filter-status" onchange="renderFeedbacks()" class="bg-transparent text-xs text-neutral-300 font-medium border-0 focus:ring-0 outline-none pr-6 py-0.5 cursor-pointer">
+                                <option value="all">All Status</option>
+                                <option value="open">Open</option>
+                                <option value="resolved">Resolved</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback cards list -->
+                <div id="feedback-list-container" class="space-y-4">
+                    <div class="text-center py-12 text-xs text-neutral-500 italic">Loading feedback logs...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Authorized System Health Panel Layout (Tab 3) -->
+        <div id="health-panel-layout" class="hidden flex flex-col gap-6 mt-4">
+            <!-- Health Header -->
+            <div class="glass-panel rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <span class="text-[10px] bg-[#C97B3D]/10 border border-[#C97B3D]/30 text-[#C97B3D] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
+                        System Diagnostics
+                    </span>
+                    <h2 class="text-2xl font-extrabold text-white mt-3">Node & Microservice Diagnostics</h2>
+                    <p class="text-neutral-400 text-xs font-light mt-1 max-w-xl leading-relaxed">
+                        Live monitoring of database node, secondary microservices, LLM APIs, and server resources.
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-2 bg-neutral-900/60 px-4 py-2.5 rounded-xl border border-neutral-800/80">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <span class="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Live Polling (5s)</span>
+                </div>
+            </div>
+
+            <!-- Health Gauges and Connection Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- MongoDB Node Card -->
+                <div class="glass-panel rounded-2xl p-6 flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-500 text-xl" id="health-db-icon-container">
+                            <i class="fa-solid fa-database"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-white">MongoDB Cluster</h3>
+                            <p class="text-[11px] text-neutral-400 mt-0.5" id="health-db-desc">Checking connection...</p>
+                        </div>
+                    </div>
+                    <span id="health-db-badge" class="text-[10px] font-bold uppercase px-2.5 py-1 rounded bg-neutral-900 border border-neutral-800 text-neutral-500">
+                        PENDING
+                    </span>
+                </div>
+
+                <!-- Flask Chatbot Card -->
+                <div class="glass-panel rounded-2xl p-6 flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-xl" id="health-flask-icon-container">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-white">Flask Chatbot App</h3>
+                            <p class="text-[11px] text-neutral-400 mt-0.5" id="health-flask-desc">Checking API ping...</p>
+                        </div>
+                    </div>
+                    <span id="health-flask-badge" class="text-[10px] font-bold uppercase px-2.5 py-1 rounded bg-neutral-900 border border-neutral-800 text-neutral-500">
+                        PENDING
+                    </span>
+                </div>
+
+                <!-- API Integrations Card -->
+                <div class="glass-panel rounded-2xl p-6 flex flex-col justify-between gap-4">
+                    <div class="flex justify-between items-center border-b border-neutral-900/60 pb-2">
+                        <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-wider">AI API Credentials</h3>
+                        <i class="fa-solid fa-key text-[#C97B3D] text-xs"></i>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-neutral-400">Gemini LLM API</span>
+                            <span id="health-api-gemini" class="font-mono text-[10px] font-bold uppercase text-neutral-500">Checking...</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-neutral-400">HuggingFace API</span>
+                            <span id="health-api-hf" class="font-mono text-[10px] font-bold uppercase text-neutral-500">Checking...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Infrastructure details & Memory charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Host Environment -->
+                <div class="lg:col-span-5 glass-panel rounded-2xl p-6 flex flex-col justify-between gap-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wider pb-3 border-b border-brand-border mb-4">
+                            Host Environment
+                        </h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-neutral-400">Platform OS</span>
+                                <span id="health-host-platform" class="font-mono text-white">loading...</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-neutral-400">NodeJS Engine</span>
+                                <span id="health-host-node" class="font-mono text-white">loading...</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-neutral-400">System Uptime</span>
+                                <span id="health-host-uptime" class="font-mono text-white">loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-neutral-900/50 border border-neutral-900 rounded-xl p-3.5 mt-2 flex items-center gap-3">
+                        <i class="fa-solid fa-circle-info text-[#C97B3D] text-sm"></i>
+                        <p class="text-[10px] text-neutral-400 leading-normal">
+                            This panel polls Node infrastructure metrics dynamically. To run check immediately, reload or toggle tabs.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Node Heap Resource Monitor -->
+                <div class="lg:col-span-7 glass-panel rounded-2xl p-6">
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider pb-3 border-b border-brand-border mb-6">
+                        Node Heap Monitor
+                    </h3>
+                    
+                    <div class="space-y-5">
+                        <!-- RSS Progress -->
+                        <div>
+                            <div class="flex justify-between items-center text-xs mb-1.5">
+                                <span class="text-neutral-400">Resident Set Size (RSS)</span>
+                                <span id="health-mem-rss" class="font-mono text-white font-semibold">0 MB</span>
+                            </div>
+                            <div class="w-full bg-neutral-900 border border-neutral-800/80 rounded-full h-2">
+                                <div id="health-mem-rss-bar" class="bg-[#C97B3D] h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Heap Total Progress -->
+                        <div>
+                            <div class="flex justify-between items-center text-xs mb-1.5">
+                                <span class="text-neutral-400">Total Allocated Heap</span>
+                                <span id="health-mem-heaptotal" class="font-mono text-white font-semibold">0 MB</span>
+                            </div>
+                            <div class="w-full bg-neutral-900 border border-neutral-800/80 rounded-full h-2">
+                                <div id="health-mem-heaptotal-bar" class="bg-purple-500 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Heap Used Progress -->
+                        <div>
+                            <div class="flex justify-between items-center text-xs mb-1.5">
+                                <span class="text-neutral-400">Used Memory Heap</span>
+                                <span id="health-mem-heapused" class="font-mono text-white font-semibold">0 MB</span>
+                            </div>
+                            <div class="w-full bg-neutral-900 border border-neutral-800/80 rounded-full h-2">
+                                <div id="health-mem-heapused-bar" class="bg-sky-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/synapse-canvas.js"></script>
+    <script src="js/navbar-auth.js?v=2"></script>
+    <script>
+        let allTopics = {};
+        let activeTopicId = 'arrays';
+        let currentTab = 'questions';
+        let feedbacks = [];
+        let healthPollInterval = null;
+
+        function checkAdminAuth() {
+            const userStr = localStorage.getItem("synapse_user");
+            const token = localStorage.getItem("synapse_token");
+            if (!userStr || !token) {
+                showAuthGate(true);
+                return;
+            }
+            try {
+                const user = JSON.parse(userStr);
+                if (user.role === 'admin') {
+                    showAuthGate(false);
+                    loadDsaTopics();
+                } else {
+                    showAuthGate(true);
+                }
+            } catch (e) {
+                showAuthGate(true);
+            }
+        }
+
+        function showAuthGate(show) {
+            if (show) {
+                document.getElementById("auth-gate-card").classList.remove("hidden");
+                document.getElementById("admin-tabs-header").classList.add("hidden");
+                document.getElementById("questions-panel-layout").classList.add("hidden");
+                if (document.getElementById("feedback-panel-layout")) document.getElementById("feedback-panel-layout").classList.add("hidden");
+                if (document.getElementById("health-panel-layout")) document.getElementById("health-panel-layout").classList.add("hidden");
+            } else {
+                document.getElementById("auth-gate-card").classList.add("hidden");
+                document.getElementById("admin-tabs-header").classList.remove("hidden");
+                switchAdminTab(currentTab);
+            }
+        }
+
+        function switchAdminTab(tabName) {
+            currentTab = tabName;
+            
+            // Clear health polling interval if not on health tab
+            if (tabName !== 'health' && healthPollInterval) {
+                clearInterval(healthPollInterval);
+                healthPollInterval = null;
+            }
+
+            // Hide all layouts
+            document.getElementById("questions-panel-layout").classList.add("hidden");
+            if (document.getElementById("feedback-panel-layout")) {
+                document.getElementById("feedback-panel-layout").classList.add("hidden");
+            }
+            if (document.getElementById("health-panel-layout")) {
+                document.getElementById("health-panel-layout").classList.add("hidden");
+            }
+
+            // Update active state on tab buttons
+            const tabs = ['questions', 'feedback', 'health'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if (btn) {
+                    if (t === tabName) {
+                        btn.className = "pb-3 border-b-2 border-brand-orange text-white cursor-pointer transition-all";
+                        const icon = btn.querySelector('i');
+                        if (icon) icon.classList.add('text-brand-orange');
+                    } else {
+                        btn.className = "pb-3 border-b-2 border-transparent text-neutral-400 hover:text-white cursor-pointer transition-all";
+                        const icon = btn.querySelector('i');
+                        if (icon) icon.classList.remove('text-brand-orange');
+                    }
+                }
+            });
+
+            // Show active layout and perform initial fetch
+            if (tabName === 'questions') {
+                document.getElementById("questions-panel-layout").classList.remove("hidden");
+            } else if (tabName === 'feedback') {
+                document.getElementById("feedback-panel-layout").classList.remove("hidden");
+                loadFeedbacks();
+            } else if (tabName === 'health') {
+                document.getElementById("health-panel-layout").classList.remove("hidden");
+                loadSystemHealth();
+                // Polling every 5 seconds
+                healthPollInterval = setInterval(loadSystemHealth, 5000);
+            }
+        }
+
+        async function loadFeedbacks() {
+            const token = localStorage.getItem("synapse_token");
+            if (!token) return;
+            
+            try {
+                const res = await fetch(`${SYNAPSE_BACKEND}/api/feedback`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    feedbacks = data.feedbacks;
+                    updateFeedbackStats();
+                    renderFeedbacks();
+                } else {
+                    showToast("Failed to load feedback: " + data.error, "#ef4444");
+                }
+            } catch (e) {
+                console.error("Fetch feedback error:", e);
+                showToast("Failed to fetch feedback logs from server.", "#ef4444");
+            }
+        }
+
+        function updateFeedbackStats() {
+            if (!feedbacks) return;
+            const total = feedbacks.length;
+            const bugs = feedbacks.filter(f => f.type === 'bug').length;
+            const features = feedbacks.filter(f => f.type === 'feature').length;
+            const open = feedbacks.filter(f => f.status === 'open').length;
+
+            document.getElementById("fb-total-val").textContent = total;
+            document.getElementById("fb-bugs-val").textContent = bugs;
+            document.getElementById("fb-features-val").textContent = features;
+            document.getElementById("fb-open-val").textContent = open;
+        }
+
+        function renderFeedbacks() {
+            const container = document.getElementById("feedback-list-container");
+            if (!container) return;
+
+            const filterType = document.getElementById("fb-filter-type").value;
+            const filterStatus = document.getElementById("fb-filter-status").value;
+
+            // Filter feedbacks
+            const filtered = feedbacks.filter(f => {
+                const typeMatch = filterType === 'all' || f.type === filterType;
+                const statusMatch = filterStatus === 'all' || f.status === filterStatus;
+                return typeMatch && statusMatch;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-xs text-neutral-500 italic">No feedback entries match the selected filters.</div>`;
+                return;
+            }
+
+            container.innerHTML = "";
+            filtered.forEach(f => {
+                const card = document.createElement("div");
+                card.className = "p-4.5 rounded-xl border border-neutral-900 bg-neutral-900/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-neutral-800 transition-all";
+
+                const left = document.createElement("div");
+                left.className = "flex-1 min-w-0";
+
+                const header = document.createElement("div");
+                header.className = "flex flex-wrap items-center gap-2 mb-2";
+
+                const typeBadge = document.createElement("span");
+                const type = f.type.toLowerCase();
+                if (type === 'bug') {
+                    typeBadge.className = "text-[9px] font-bold uppercase px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/30 text-rose-400";
+                    typeBadge.textContent = "BUG REPORT";
+                } else if (type === 'feature') {
+                    typeBadge.className = "text-[9px] font-bold uppercase px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/30 text-sky-400";
+                    typeBadge.textContent = "FEATURE REQ";
+                } else {
+                    typeBadge.className = "text-[9px] font-bold uppercase px-2 py-0.5 rounded bg-[#C97B3D]/10 border border-[#C97B3D]/30 text-[#C97B3D]";
+                    typeBadge.textContent = "FEEDBACK";
+                }
+                header.appendChild(typeBadge);
+
+                const statusBadge = document.createElement("span");
+                if (f.status === 'resolved') {
+                    statusBadge.className = "text-[9px] font-bold uppercase px-2 py-0.5 rounded bg-green-500/10 border border-green-500/30 text-green-400";
+                    statusBadge.textContent = "RESOLVED";
+                } else {
+                    statusBadge.className = "text-[9px] font-bold uppercase px-2 py-0.5 rounded bg-neutral-800 border border-neutral-700 text-neutral-400";
+                    statusBadge.textContent = "OPEN";
+                }
+                header.appendChild(statusBadge);
+
+                const dateSpan = document.createElement("span");
+                dateSpan.className = "text-[10px] text-neutral-500 font-mono";
+                dateSpan.textContent = new Date(f.createdAt).toLocaleString();
+                header.appendChild(dateSpan);
+
+                left.appendChild(header);
+
+                const userText = document.createElement("div");
+                userText.className = "text-xs font-bold text-white flex items-center gap-1.5 mb-1";
+                userText.innerHTML = `<span class="text-neutral-300">${f.name}</span> <span class="text-neutral-500 font-normal font-mono">&lt;${f.email}&gt;</span>`;
+                left.appendChild(userText);
+
+                const msgDiv = document.createElement("div");
+                msgDiv.className = "text-neutral-300 text-xs font-light leading-relaxed whitespace-pre-wrap mt-2 select-text";
+                msgDiv.textContent = f.message;
+                left.appendChild(msgDiv);
+
+                card.appendChild(left);
+
+                const right = document.createElement("div");
+                right.className = "flex items-center gap-2 mt-2 md:mt-0 self-stretch md:self-auto justify-end border-t border-neutral-900/50 md:border-t-0 pt-2 md:pt-0";
+
+                const resolveBtn = document.createElement("button");
+                resolveBtn.className = `px-3 py-1.5 rounded-lg border text-xs font-bold cursor-pointer transition-all flex items-center gap-1.5 ${f.status === 'resolved' 
+                    ? 'bg-neutral-900 border-neutral-850 text-neutral-400 hover:text-white' 
+                    : 'bg-green-500/10 border-green-500/30 text-green-400 hover:bg-green-500/20'}`;
+                resolveBtn.onclick = () => toggleResolveFeedback(f._id);
+                resolveBtn.innerHTML = f.status === 'resolved' 
+                    ? `<i class="fa-solid fa-rotate-left"></i> Re-open` 
+                    : `<i class="fa-solid fa-check"></i> Mark Resolved`;
+                right.appendChild(resolveBtn);
+
+                const deleteBtn = document.createElement("button");
+                deleteBtn.className = "w-8 h-8 rounded-lg bg-brand-red/10 hover:bg-brand-red/20 text-brand-red-light border border-brand-red/30 flex items-center justify-center cursor-pointer transition-all";
+                deleteBtn.title = "Delete Feedback Log";
+                deleteBtn.onclick = () => deleteFeedback(f._id, f.name);
+                deleteBtn.innerHTML = `<i class="fa-regular fa-trash-can"></i>`;
+                right.appendChild(deleteBtn);
+
+                card.appendChild(right);
+                container.appendChild(card);
+            });
+        }
+
+        async function toggleResolveFeedback(id) {
+            const token = localStorage.getItem("synapse_token");
+            if (!token) return;
+
+            try {
+                const res = await fetch(`${SYNAPSE_BACKEND}/api/feedback/${id}`, {
+                    method: "PUT",
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const idx = feedbacks.findIndex(f => f._id === id);
+                    if (idx !== -1) {
+                        feedbacks[idx] = data.feedback;
+                        updateFeedbackStats();
+                        renderFeedbacks();
+                        showToast(`Status updated successfully!`, "#10b981");
+                    }
+                } else {
+                    showToast("Failed to update: " + data.error, "#ef4444");
+                }
+            } catch (e) {
+                console.error("Toggle resolve feedback error:", e);
+                showToast("Failed to update status on server.", "#ef4444");
+            }
+        }
+
+        async function deleteFeedback(id, name) {
+            if (!confirm(`Are you sure you want to permanently delete feedback from "${name}"?`)) return;
+
+            const token = localStorage.getItem("synapse_token");
+            if (!token) return;
+
+            try {
+                const res = await fetch(`${SYNAPSE_BACKEND}/api/feedback/${id}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    feedbacks = feedbacks.filter(f => f._id !== id);
+                    updateFeedbackStats();
+                    renderFeedbacks();
+                    showToast(`Feedback log deleted.`, "#10b981");
+                } else {
+                    showToast("Failed to delete: " + data.error, "#ef4444");
+                }
+            } catch (e) {
+                console.error("Delete feedback error:", e);
+                showToast("Failed to delete from server.", "#ef4444");
+            }
+        }
+
+        async function loadSystemHealth() {
+            const token = localStorage.getItem("synapse_token");
+            if (!token) return;
+
+            try {
+                const res = await fetch(`${SYNAPSE_BACKEND}/api/admin/system-health`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    renderSystemHealth(data.health);
+                } else {
+                    console.error("System health API returned error:", data.error);
+                }
+            } catch (e) {
+                console.error("Fetch system health error:", e);
+            }
+        }
+
+        function renderSystemHealth(health) {
+            const dbBadge = document.getElementById("health-db-badge");
+            const dbDesc = document.getElementById("health-db-desc");
+            const dbIconCont = document.getElementById("health-db-icon-container");
+            
+            if (health.database.status === "connected") {
+                dbBadge.className = "text-[10px] font-bold uppercase px-2.5 py-1 rounded bg-green-500/10 border border-green-500/30 text-green-400";
+                dbBadge.textContent = "CONNECTED";
+                dbDesc.textContent = "Database Node Online";
+                dbIconCont.className = "w-12 h-12 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-500 text-xl";
+            } else {
+                dbBadge.className = "text-[10px] font-bold uppercase px-2.5 py-1 rounded bg-rose-500/10 border border-rose-500/30 text-rose-400 animate-pulse";
+                dbBadge.textContent = "DISCONNECTED";
+                dbDesc.textContent = "DB connection offline";
+                dbIconCont.className = "w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 text-xl";
+            }
+
+            const flaskBadge = document.getElementById("health-flask-badge");
+            const flaskDesc = document.getElementById("health-flask-desc");
+            const flaskIconCont = document.getElementById("health-flask-icon-container");
+
+            if (health.chatbot.status === "active") {
+                flaskBadge.className = "text-[10px] font-bold uppercase px-2.5 py-1 rounded bg-purple-500/10 border border-purple-500/30 text-purple-400";
+                flaskBadge.textContent = "ACTIVE";
+                flaskDesc.textContent = "Port 5002 Microservice OK";
+                flaskIconCont.className = "w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-xl";
+            } else if (health.chatbot.status === "timeout") {
+                flaskBadge.className = "text-[10px] font-bold uppercase px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400";
+                flaskBadge.textContent = "TIMEOUT";
+                flaskDesc.textContent = "Response timed out";
+                flaskIconCont.className = "w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-xl";
+            } else {
+                flaskBadge.className = "text-[10px] font-bold uppercase px-2.5 py-1 rounded bg-rose-500/10 border border-rose-500/30 text-rose-400 animate-pulse";
+                flaskBadge.textContent = "INACTIVE";
+                flaskDesc.textContent = "Offline or crashing";
+                flaskIconCont.className = "w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500 text-xl";
+            }
+
+            const geminiStatus = document.getElementById("health-api-gemini");
+            const hfStatus = document.getElementById("health-api-hf");
+
+            if (health.apis.gemini === "configured") {
+                geminiStatus.className = "font-mono text-[10px] font-bold uppercase text-green-400";
+                geminiStatus.textContent = "CONFIGURED";
+            } else {
+                geminiStatus.className = "font-mono text-[10px] font-bold uppercase text-rose-400";
+                geminiStatus.textContent = "MISSING";
+            }
+
+            if (health.apis.huggingface === "configured") {
+                hfStatus.className = "font-mono text-[10px] font-bold uppercase text-green-400";
+                hfStatus.textContent = "CONFIGURED";
+            } else {
+                hfStatus.className = "font-mono text-[10px] font-bold uppercase text-rose-400";
+                hfStatus.textContent = "MISSING";
+            }
+
+            document.getElementById("health-host-platform").textContent = health.server.platform;
+            document.getElementById("health-host-node").textContent = health.server.nodeVersion;
+            
+            const u = health.server.uptime;
+            const days = Math.floor(u / 86400);
+            const hrs = Math.floor((u % 86400) / 3600);
+            const mins = Math.floor((u % 3600) / 60);
+            const secs = u % 60;
+            let uptimeStr = "";
+            if (days > 0) uptimeStr += `${days}d `;
+            if (hrs > 0 || days > 0) uptimeStr += `${hrs}h `;
+            uptimeStr += `${mins}m ${secs}s`;
+            document.getElementById("health-host-uptime").textContent = uptimeStr;
+
+            const rssVal = health.server.memoryUsage.rss;
+            const heapTotalVal = health.server.memoryUsage.heapTotal;
+            const heapUsedVal = health.server.memoryUsage.heapUsed;
+
+            document.querySelectorAll("#health-mem-rss").forEach(el => el.textContent = `${rssVal} MB`);
+            document.querySelectorAll("#health-mem-heaptotal").forEach(el => el.textContent = `${heapTotalVal} MB`);
+            document.querySelectorAll("#health-mem-heapused").forEach(el => el.textContent = `${heapUsedVal} MB`);
+
+            const rssPct = Math.min(100, Math.max(5, (rssVal / 512) * 100));
+            const heapTotalPct = Math.min(100, Math.max(5, (heapTotalVal / 256) * 100));
+            const heapUsedPct = Math.min(100, Math.max(5, (heapUsedVal / heapTotalVal) * 100));
+
+            document.getElementById("health-mem-rss-bar").style.width = `${rssPct}%`;
+            document.getElementById("health-mem-heaptotal-bar").style.width = `${heapTotalPct}%`;
+            document.getElementById("health-mem-heapused-bar").style.width = `${heapUsedPct}%`;
+        }
+
+        function loginAsDemoAdmin() {
+            const demoAdminUser = {
+                id: "demo_admin_user_" + Date.now(),
+                name: "Administrator",
+                email: "admin@synapse.ai",
+                role: "admin"
+            };
+            localStorage.setItem("synapse_token", "demo_admin_token_" + Date.now());
+            localStorage.setItem("synapse_user", JSON.stringify(demoAdminUser));
+            
+            const currentStats = JSON.parse(localStorage.getItem('synapse_stats') || '{}');
+            currentStats.xp = Math.max(currentStats.xp || 0, 1000);
+            localStorage.setItem('synapse_stats', JSON.stringify(currentStats));
+
+            if (typeof syncNavbarAuth === "function") syncNavbarAuth();
+            
+            showAuthGate(false);
+            loadDsaTopics();
+            showToast("Logged in as Administrator", "#10b981");
+        }
+
+        async function loadDsaTopics() {
+            try {
+                const res = await fetch(`${SYNAPSE_BACKEND}/api/dsa/topics`);
+                const data = await res.json();
+                if (data.success) {
+                    allTopics = data.topics;
+                    renderTopicsMenu();
+                    renderActiveTopic();
+                } else {
+                    showToast("Failed to load questions: " + data.error, "#ef4444");
+                }
+            } catch (e) {
+                console.error("Fetch topics error:", e);
+                showToast("Server unreachable. Questions loaded from static file.", "#fbbf24");
+                if (typeof topicsData !== "undefined") {
+                    allTopics = topicsData;
+                    renderTopicsMenu();
+                    renderActiveTopic();
+                }
+            }
+        }
+
+        function renderTopicsMenu() {
+            const container = document.getElementById("topics-list-container");
+            container.innerHTML = "";
+            
+            for (const key in allTopics) {
+                const topic = allTopics[key];
+                const btn = document.createElement("button");
+                btn.className = `topic-item w-full text-left px-4 py-3 text-xs font-semibold text-neutral-400 hover:text-white rounded transition-all cursor-pointer flex items-center justify-between ${key === activeTopicId ? 'active' : ''}`;
+                btn.onclick = () => selectTopic(key);
+                
+                const titleSpan = document.createElement("span");
+                titleSpan.textContent = topic.title.split(" - ")[0];
+                btn.appendChild(titleSpan);
+
+                const countSpan = document.createElement("span");
+                countSpan.className = "font-mono px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800 text-[10px] text-neutral-400";
+                countSpan.textContent = topic.totalQuestions;
+                btn.appendChild(countSpan);
+
+                container.appendChild(btn);
+            }
+        }
+
+        function selectTopic(topicId) {
+            activeTopicId = topicId;
+            renderTopicsMenu();
+            renderActiveTopic();
+        }
+
+        function renderActiveTopic() {
+            const topic = allTopics[activeTopicId];
+            if (!topic) return;
+
+            document.getElementById("pattern-badge").textContent = activeTopicId.replace("-", " ").toUpperCase();
+            document.getElementById("pattern-title").textContent = topic.title;
+            document.getElementById("pattern-subtitle").textContent = topic.subtitle;
+
+            document.getElementById("stat-total-val").textContent = topic.totalQuestions;
+            document.getElementById("stat-easy-val").textContent = topic.stats.easy;
+            document.getElementById("stat-med-val").textContent = topic.stats.med;
+            document.getElementById("stat-hard-val").textContent = topic.stats.hard;
+
+            const groupList = document.getElementById("questions-group-list");
+            groupList.innerHTML = "";
+
+            const groups = ["Basic", "Easy", "Medium", "Hard"];
+            groups.forEach(group => {
+                const questions = topic.difficulties[group] || [];
+                if (questions.length === 0) return;
+
+                const block = document.createElement("div");
+                block.className = "bg-neutral-900/20 p-4 rounded-xl border border-neutral-900/60";
+
+                const blockHeader = document.createElement("div");
+                blockHeader.className = "flex justify-between items-center mb-3 text-xs font-bold text-neutral-400 border-b border-neutral-800 pb-2";
+                blockHeader.innerHTML = `<span>${group} Questions (${questions.length})</span>`;
+                block.appendChild(blockHeader);
+
+                const list = document.createElement("div");
+                list.className = "space-y-2";
+
+                questions.forEach(q => {
+                    const row = document.createElement("div");
+                    row.className = "flex items-center justify-between p-2.5 rounded bg-neutral-900/40 border border-neutral-800/50 hover:border-neutral-700/60 transition-all text-xs";
+
+                    const leftSide = document.createElement("div");
+                    leftSide.className = "flex items-center gap-3";
+                    
+                    const badge = document.createElement("span");
+                    const dl = q.diff.toLowerCase();
+                    badge.className = `badge-diff ${dl === 'medium' ? 'medium' : dl}`;
+                    badge.textContent = q.diff;
+                    leftSide.appendChild(badge);
+
+                    const nameSpan = document.createElement("span");
+                    nameSpan.className = "text-white font-medium";
+                    nameSpan.textContent = q.name;
+                    leftSide.appendChild(nameSpan);
+
+                    const features = document.createElement("div");
+                    features.className = "flex items-center gap-2 text-[10px] text-neutral-500 ml-4";
+                    if (q.vid) features.innerHTML += `<i class="fa-brands fa-youtube text-brand-orange" title="Has Video"></i>`;
+                    if (q.doc) features.innerHTML += `<i class="fa-regular fa-file-lines text-sky-400" title="Has Articles"></i>`;
+                    if (q.prac) features.innerHTML += `<i class="fa-solid fa-code text-purple-400" title="Has Playground"></i>`;
+                    leftSide.appendChild(features);
+
+                    row.appendChild(leftSide);
+
+                    const delBtn = document.createElement("button");
+                    delBtn.className = "w-7 h-7 rounded bg-brand-red/10 hover:bg-brand-red/20 text-brand-red-light border border-brand-red/30 flex items-center justify-center cursor-pointer transition-all";
+                    delBtn.title = "Delete Question";
+                    delBtn.onclick = () => handleDeleteQuestion(group, q.name);
+                    delBtn.innerHTML = `<i class="fa-regular fa-trash-can"></i>`;
+                    row.appendChild(delBtn);
+
+                    list.appendChild(row);
+                });
+
+                block.appendChild(list);
+                groupList.appendChild(block);
+            });
+
+            if (groupList.children.length === 0) {
+                groupList.innerHTML = `<div class="text-center py-8 text-xs text-neutral-500 italic">No questions in this pattern. Add one below or reset defaults.</div>`;
+            }
+        }
+
+        async function handleAddQuestion(event) {
+            event.preventDefault();
+            const name = document.getElementById("q-title-input").value.trim();
+            const groupName = document.getElementById("q-group-select").value;
+            const diff = document.getElementById("q-diff-select").value;
+            const link = document.getElementById("q-url-input").value.trim() || "#";
+            const vid = document.getElementById("chk-vid").checked;
+            const doc = document.getElementById("chk-doc").checked;
+            const prac = document.getElementById("chk-prac").checked;
+
+            if (!name) return;
+
+            const submitBtn = event.target.querySelector("button[type='submit']");
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Adding...`;
+
+            try {
+                const res = await fetch(`${SYNAPSE_BACKEND}/api/dsa/questions`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        topicId: activeTopicId,
+                        groupName,
+                        question: { name, diff, link, vid, doc, prac }
+                    })
+                });
+
+                const result = await res.json();
+                if (result.success) {
+                    allTopics = result.topics;
+                    renderTopicsMenu();
+                    renderActiveTopic();
+                    document.getElementById("add-question-form").reset();
+                    document.getElementById("q-url-input").value = "#";
+                    showToast(`"${name}" added successfully!`, "#10b981");
+                } else {
+                    showToast("Failed to add: " + result.error, "#ef4444");
+                }
+            } catch (e) {
+                console.error("Add question error:", e);
+                showToast("Failed to add question. Server unreachable.", "#ef4444");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="fa-solid fa-plus"></i> Add Question`;
+            }
+        }
+
+        async function handleDeleteQuestion(groupName, questionName) {
+            if (!confirm(`Are you sure you want to remove "${questionName}" from the question bank?`)) return;
+
+            try {
+                const res = await fetch(`${SYNAPSE_BACKEND}/api/dsa/questions`, {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        topicId: activeTopicId,
+                        groupName,
+                        questionName
+                    })
+                });
+
+                const result = await res.json();
+                if (result.success) {
+                    allTopics = result.topics;
+                    renderTopicsMenu();
+                    renderActiveTopic();
+                    showToast(`"${questionName}" removed successfully!`, "#10b981");
+                } else {
+                    showToast("Failed to delete: " + result.error, "#ef4444");
+                }
+            } catch (e) {
+                console.error("Delete question error:", e);
+                showToast("Failed to delete question. Server unreachable.", "#ef4444");
+            }
+        }
+
+        function showToast(msg, color = '#C97B3D') {
+            if (window.showToast) {
+                window.showToast(msg, color);
+                return;
+            }
+            const existing = document.querySelector('.admin-toast');
+            if (existing) existing.remove();
+            
+            const toast = document.createElement('div');
+            toast.className = 'admin-toast';
+            toast.style.cssText = `position:fixed;bottom:24px;right:24px;background:#111;border:1px solid ${color}44;color:${color};padding:14px 22px;border-radius:14px;font-size:13px;font-weight:600;font-family:Inter,sans-serif;z-index:9999;box-shadow:0 10px 40px rgba(0,0,0,0.3);opacity:0;transition:all 0.3s ease;`;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            
+            requestAnimationFrame(() => { toast.style.opacity = '1'; });
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        window.addEventListener('DOMContentLoaded', checkAdminAuth);
+    </script>
+</body>
+</html>

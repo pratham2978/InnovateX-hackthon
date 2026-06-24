@@ -4,12 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SYNAPSE — Premium Student Dashboard</title>
+    <meta name="description" content="Debug your degree, ace your placements. An AI-powered all-in-one ecosystem for college study, DSA prep, mock interviews, and career development.">
+    <meta property="og:title" content="SYNAPSE — AI-Powered Student Dashboard">
+    <meta property="og:description" content="Debug your degree, ace your placements. All-in-one ecosystem for college students.">
+    <meta property="og:type" content="website">
+    <meta name="theme-color" content="#0A0A0A">
+    <link rel="manifest" href="manifest.json">
     <!-- Tailwind CSS v4 via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/shared.css">
 
     <!-- Tailwind v4 Custom Theme Configuration -->
     <style type="text/tailwindcss">
@@ -116,8 +123,9 @@
             </div>
             
             <div class="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-400">
-                <a href="index.html" class="hover:text-white transition-colors">Home</a>
+                <a href="index.html" class="text-white font-bold transition-colors">Home</a>
                 <a href="features.html" class="hover:text-white transition-colors">Features</a>
+                <a href="analytics.html" class="hover:text-white transition-colors">Analytics</a>
                 <a href="global-ranking.html" class="hover:text-white transition-colors">Global Ranking</a>
             </div>
 
@@ -164,12 +172,15 @@
                 <a href="features.html" id="btn-explore" class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-medium tracking-wide bg-brand-card border border-brand-border text-neutral-300 hover:text-white hover:border-neutral-700 transition-all text-center flex items-center justify-center gap-2">
                     Explore Features <i class="fa-solid fa-compass"></i>
                 </a>
+                <button onclick="activateDemoMode()" class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-medium tracking-wide bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 transition-all text-center flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-play"></i> Try Demo
+                </button>
 
                 <!-- Logged In Buttons -->
                 <a href="features.html" id="btn-workspace-cta" class="hidden w-full sm:w-auto px-8 py-3.5 rounded-xl font-medium tracking-wide bg-gradient-to-r from-brand-orange to-brand-red hover:from-brand-orange-light hover:to-brand-red-light text-white shadow-xl shadow-brand-red/10 hover:shadow-brand-red/20 transform hover:-translate-y-0.5 transition-all text-center flex items-center justify-center gap-2">
                     Launch Sandbox <i class="fa-solid fa-cubes"></i>
                 </a>
-                <a href="profile.html" id="btn-profile" class="hidden w-full sm:w-auto px-8 py-3.5 rounded-xl font-medium tracking-wide bg-brand-card border border-brand-orange/40 hover:border-brand-orange text-brand-orange hover:text-brand-orange-light transition-all text-center shadow-lg shadow-brand-orange/5 hover:shadow-brand-orange/10 transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                <a href="analytics.html" id="btn-profile" class="hidden w-full sm:w-auto px-8 py-3.5 rounded-xl font-medium tracking-wide bg-brand-card border border-brand-orange/40 hover:border-brand-orange text-brand-orange hover:text-brand-orange-light transition-all text-center shadow-lg shadow-brand-orange/5 hover:shadow-brand-orange/10 transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
                     My Profile <i class="fa-solid fa-user"></i>
                 </a>
             </div>
@@ -338,54 +349,16 @@
             requestAnimationFrame(animate);
         }
         animate();
+    </script>
 
-        // Sync Navbar Auth State
-        function syncNavbarAuth() {
-            const token = localStorage.getItem("synapse_token");
-            const userStr = localStorage.getItem("synapse_user");
-            const container = document.getElementById("nav-auth-container");
-            
-            if (token && userStr && container) {
-                try {
-                    const user = JSON.parse(userStr);
-                    const initials = user.name ? user.name.split(" ").map(n => n.charAt(0)).join("").toUpperCase().slice(0, 2) : "U";
-                    container.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <div onclick="window.location.href='profile.html'" class="w-8 h-8 rounded-full bg-brand-orange/20 border border-brand-orange/40 hover:border-brand-orange hover:bg-brand-orange/35 flex items-center justify-center text-brand-orange text-xs font-bold font-mono cursor-pointer transition-all" title="View Profile">
-                                ${initials}
-                            </div>
-                            <span onclick="window.location.href='profile.html'" class="text-xs text-neutral-300 hover:text-white font-semibold hidden sm:inline cursor-pointer transition-all" title="View Profile">${user.name || 'User'}</span>
-                            <button onclick="handleLogout()" class="text-xs font-semibold px-3 py-1.5 border border-brand-border rounded-lg text-neutral-400 hover:text-white hover:border-neutral-500 transition-all cursor-pointer">
-                                Log Out
-                            </button>
-                        </div>
-                    `;
-                    
-                    // Toggle hero buttons based on auth state
-                    const btnLoginCta = document.getElementById("btn-login-cta");
-                    const btnExplore = document.getElementById("btn-explore");
-                    const btnWorkspaceCta = document.getElementById("btn-workspace-cta");
-                    const btnProfile = document.getElementById("btn-profile");
-                    
-                    if (btnLoginCta && btnExplore && btnWorkspaceCta && btnProfile) {
-                        btnLoginCta.classList.add("hidden");
-                        btnExplore.classList.add("hidden");
-                        btnWorkspaceCta.classList.remove("hidden");
-                        btnProfile.classList.remove("hidden");
-                    }
-                } catch (e) {
-                    console.error("Auth sync error:", e);
-                }
-            }
+    <!-- Shared Modules -->
+    <script src="js/navbar-auth.js"></script>
+
+    <!-- PWA Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
         }
-
-        function handleLogout() {
-            localStorage.removeItem("synapse_token");
-            localStorage.removeItem("synapse_user");
-            window.location.reload();
-        }
-
-        window.addEventListener('DOMContentLoaded', syncNavbarAuth);
     </script>
 </body>
 </html>

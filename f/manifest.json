@@ -1,0 +1,23 @@
+{
+    "name": "SYNAPSE — AI-Powered Student Dashboard",
+    "short_name": "Synapse",
+    "description": "Debug your degree, ace your placements. An all-in-one ecosystem for college study, DSA prep, mock interviews, and career development.",
+    "start_url": "/",
+    "display": "standalone",
+    "theme_color": "#0A0A0A",
+    "background_color": "#0A0A0A",
+    "orientation": "any",
+    "categories": ["education", "productivity"],
+    "icons": [
+        {
+            "src": "/static/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/static/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

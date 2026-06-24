@@ -23,7 +23,7 @@ const app = express();
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const User = require("./models/user");
-const JWT_SECRET = process.env.JWT_SECRET || "synapse_super_secret_auth_key";
+const JWT_SECRET = process.env.JWT_SECRET || "change_this_secret_in_env";
 
 const getPythonPath = () => {
   const fs = require("fs");
@@ -64,6 +64,10 @@ const ensurePythonDeps = () => {
   
   console.log("[ensurePythonDeps] Production environment. Verifying/installing Python dependencies...");
   
+  const reqPath = fs.existsSync(path.join(__dirname, "requirements.txt"))
+    ? path.join(__dirname, "requirements.txt")
+    : path.join(__dirname, "../requirements.txt");
+  
   // 1. Check if pip is available
   let hasPip = false;
   try {
@@ -98,14 +102,14 @@ const ensurePythonDeps = () => {
   // 2. Install dependencies using pip
   if (hasPip) {
     try {
-      console.log("[ensurePythonDeps] Installing dependencies from requirements.txt...");
+      console.log(`[ensurePythonDeps] Installing dependencies from ${reqPath}...`);
       // Try installing with --break-system-packages option
-      execSync("python3 -m pip install --break-system-packages -r ../requirements.txt", { stdio: "inherit" });
+      execSync(`python3 -m pip install --break-system-packages -r "${reqPath}"`, { stdio: "inherit" });
       console.log("[ensurePythonDeps] Dependencies installed successfully!");
     } catch (installErr) {
       console.warn("[ensurePythonDeps] Failed to install dependencies. Retrying with --user --break-system-packages...");
       try {
-        execSync("python3 -m pip install --user --break-system-packages -r ../requirements.txt", { stdio: "inherit" });
+        execSync(`python3 -m pip install --user --break-system-packages -r "${reqPath}"`, { stdio: "inherit" });
         console.log("[ensurePythonDeps] Dependencies installed successfully!");
       } catch (fallbackErr) {
         console.error("[ensurePythonDeps] Failed to install dependencies:", fallbackErr.message);
@@ -114,8 +118,8 @@ const ensurePythonDeps = () => {
   } else {
     // Last ditch effort: try calling raw pip3 or pip directly
     try {
-      console.log("[ensurePythonDeps] Attempting raw pip3 installation...");
-      execSync("pip3 install --user --break-system-packages -r ../requirements.txt", { stdio: "inherit" });
+      console.log(`[ensurePythonDeps] Attempting raw pip3 installation from ${reqPath}...`);
+      execSync(`pip3 install --user --break-system-packages -r "${reqPath}"`, { stdio: "inherit" });
       console.log("[ensurePythonDeps] Dependencies installed successfully!");
     } catch (rawErr) {
       console.error("[ensurePythonDeps] All attempts to install Python dependencies failed.");
@@ -124,9 +128,36 @@ const ensurePythonDeps = () => {
 };
 
 // Connect to MongoDB
-const mongoUri = process.env.MONGODB_URI || "mongodb+srv://prathammishra067_db_user:rtGiwx0Sh1bMmpiM@cluster0.qlgknnj.mongodb.net/?appName=Cluster0";
+const mongoUri = process.env.MONGODB_URI;
+if (!mongoUri) {
+  console.error("MONGODB_URI environment variable is not set! Please set it in .env file.");
+}
 mongoose.connect(mongoUri)
-  .then(() => console.log("Connected to MongoDB successfully to Cluster0"))
+  .then(async () => {
+    console.log("Connected to MongoDB successfully to Cluster0");
+    // Auto-create admin user from .env credentials if not exists
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    const adminName = process.env.ADMIN_NAME || "Administrator";
+    if (adminEmail && adminPassword) {
+      try {
+        const existing = await User.findOne({ email: adminEmail.toLowerCase() });
+        if (!existing) {
+          const admin = new User({ name: adminName, email: adminEmail.toLowerCase(), password: adminPassword, role: "admin" });
+          await admin.save();
+          console.log(`[Admin] Admin account created: ${adminEmail}`);
+        } else if (existing.role !== "admin") {
+          existing.role = "admin";
+          await existing.save();
+          console.log(`[Admin] Existing user promoted to admin: ${adminEmail}`);
+        } else {
+          console.log(`[Admin] Admin account already exists: ${adminEmail}`);
+        }
+      } catch (e) {
+        console.error("[Admin] Failed to create/verify admin account:", e.message);
+      }
+    }
+  })
   .catch((err) => console.error("MongoDB connection error:", err));
 
 // Define Schema & Model
@@ -161,6 +192,157 @@ app.use((req, res, next) => {
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../f")));
+
+// ==========================================
+// DSA QUESTIONS DATABASE API
+// ==========================================
+const dsaQuestionsPath = path.join(__dirname, "data", "dsa_questions.json");
+
+// Helper to load questions
+function loadDsaQuestions() {
+  try {
+    if (fs.existsSync(dsaQuestionsPath)) {
+      return JSON.parse(fs.readFileSync(dsaQuestionsPath, "utf8"));
+    }
+  } catch (e) {
+    console.error("Error reading dsa questions JSON file:", e);
+  }
+  return null;
+}
+
+// Helper to save questions
+function saveDsaQuestions(data) {
+  try {
+    const dir = path.dirname(dsaQuestionsPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(dsaQuestionsPath, JSON.stringify(data, null, 2), "utf8");
+    return true;
+  } catch (e) {
+    console.error("Error saving dsa questions JSON file:", e);
+    return false;
+  }
+}
+
+// Helper to recalculate stats
+function recalculateTopicStats(topicObj) {
+  let easy = 0;
+  let med = 0;
+  let hard = 0;
+  let total = 0;
+  
+  if (topicObj.difficulties) {
+    for (const groupName in topicObj.difficulties) {
+      const list = topicObj.difficulties[groupName] || [];
+      total += list.length;
+      list.forEach(q => {
+        const diff = (q.diff || "Easy").toLowerCase();
+        if (diff === "easy") easy++;
+        else if (diff === "medium" || diff === "med") med++;
+        else if (diff === "hard") hard++;
+      });
+    }
+  }
+  
+  topicObj.totalQuestions = total;
+  topicObj.stats = { easy, med, hard };
+}
+
+// GET /api/dsa/topics — fetch all dsa patterns and questions
+app.get("/api/dsa/topics", (req, res) => {
+  const data = loadDsaQuestions();
+  if (!data) {
+    return res.status(500).json({ success: false, error: "Failed to load questions database" });
+  }
+  res.json({ success: true, topics: data });
+});
+
+// POST /api/dsa/questions — add a question to a topic & difficulty group
+app.post("/api/dsa/questions", (req, res) => {
+  const { topicId, groupName, question } = req.body;
+  if (!topicId || !groupName || !question || !question.name || !question.diff) {
+    return res.status(400).json({ success: false, error: "Missing required fields" });
+  }
+
+  const data = loadDsaQuestions();
+  if (!data) {
+    return res.status(500).json({ success: false, error: "Failed to load database" });
+  }
+
+  if (!data[topicId]) {
+    return res.status(404).json({ success: false, error: "Topic not found" });
+  }
+
+  if (!data[topicId].difficulties[groupName]) {
+    data[topicId].difficulties[groupName] = [];
+  }
+
+  // Check if question with the same name already exists in this topic
+  let exists = false;
+  for (const g in data[topicId].difficulties) {
+    if (data[topicId].difficulties[g].some(q => q.name.toLowerCase() === question.name.toLowerCase())) {
+      exists = true;
+      break;
+    }
+  }
+
+  if (exists) {
+    return res.status(400).json({ success: false, error: "A question with this name already exists in this topic" });
+  }
+
+  // Push new question
+  const newQuestion = {
+    name: question.name,
+    diff: question.diff,
+    link: question.link || "#",
+    vid: !!question.vid,
+    doc: !!question.doc,
+    prac: !!question.prac
+  };
+
+  data[topicId].difficulties[groupName].push(newQuestion);
+  recalculateTopicStats(data[topicId]);
+
+  if (saveDsaQuestions(data)) {
+    res.json({ success: true, message: "Question added successfully", topics: data });
+  } else {
+    res.status(500).json({ success: false, error: "Failed to save data" });
+  }
+});
+
+// DELETE /api/dsa/questions — remove a question from a topic
+app.delete("/api/dsa/questions", (req, res) => {
+  const { topicId, groupName, questionName } = req.body;
+  if (!topicId || !groupName || !questionName) {
+    return res.status(400).json({ success: false, error: "Missing required fields" });
+  }
+
+  const data = loadDsaQuestions();
+  if (!data) {
+    return res.status(500).json({ success: false, error: "Failed to load database" });
+  }
+
+  if (!data[topicId] || !data[topicId].difficulties[groupName]) {
+    return res.status(404).json({ success: false, error: "Topic or group not found" });
+  }
+
+  const list = data[topicId].difficulties[groupName];
+  const index = list.findIndex(q => q.name.toLowerCase() === questionName.toLowerCase());
+  if (index === -1) {
+    return res.status(404).json({ success: false, error: "Question not found" });
+  }
+
+  list.splice(index, 1);
+  recalculateTopicStats(data[topicId]);
+
+  if (saveDsaQuestions(data)) {
+    res.json({ success: true, message: "Question removed successfully", topics: data });
+  } else {
+    res.status(500).json({ success: false, error: "Failed to save data" });
+  }
+});
+
 
 const upload = multer({
   dest: "uploads/",
@@ -318,17 +500,26 @@ app.post("/api/chat", async (req, res) => {
 
 // Code compilation and sandbox runner endpoint
 app.post("/api/run-code", (req, res) => {
+  console.log("[run-code] Received code run request. Language:", req.body.language);
   let { code, language } = req.body;
   if (!code) {
+    console.warn("[run-code] No code provided");
     return res.status(400).json({ success: false, error: "No code provided" });
   }
 
-  const tempDir = path.join(__dirname, "temp_run");
+  const os = require("os");
+  const tempDir = path.join(os.tmpdir(), "codeprep_sandbox");
   if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir);
   }
 
+  // Create request-specific isolated subdirectory to avoid multi-user/parallel conflicts
+  const reqId = Date.now() + "_" + Math.floor(Math.random() * 1000000);
+  const reqDir = path.join(tempDir, reqId);
+  fs.mkdirSync(reqDir);
+
   const lang = language ? language.toLowerCase() : "java";
+  console.log("[run-code] Target language is:", lang);
 
   if (lang === "java") {
     // Strip package declarations to avoid class loading errors
@@ -337,47 +528,55 @@ app.post("/api/run-code", (req, res) => {
     // Dynamically identify the main class name
     const classMatch = code.match(/class\s+(\w+)/);
     const className = classMatch ? classMatch[1] : "Solution";
+    console.log("[run-code] Main Class Name detected:", className);
 
-    const filePath = path.join(tempDir, `${className}.java`);
+    const filePath = path.join(reqDir, `${className}.java`);
+    console.log("[run-code] Writing java code to:", filePath);
     fs.writeFileSync(filePath, code, "utf8");
 
-    exec(`javac "${filePath}"`, (compileErr, compileStdout, compileStderr) => {
+    console.log("[run-code] Executing compiler: javac", filePath);
+    exec(`javac "${filePath}"`, { timeout: 15000, maxBuffer: 1024 * 512 }, (compileErr, compileStdout, compileStderr) => {
+      console.log("[run-code] Javac compile completed.");
       if (compileErr) {
-        try { fs.unlinkSync(filePath); } catch(e){}
+        console.error("[run-code] Compilation failed:", compileStderr || compileErr.message);
+        try { fs.rmSync(reqDir, { recursive: true, force: true }); } catch(e){}
         return res.json({ success: false, output: compileStderr || compileErr.message });
       }
 
-      exec(`java -cp "${tempDir}" ${className}`, (runErr, runStdout, runStderr) => {
-        // Clean up files in temp_run
-        try {
-          fs.unlinkSync(filePath);
-          const files = fs.readdirSync(tempDir);
-          files.forEach(f => {
-            if (f.startsWith(className) && f.endsWith(".class")) {
-              fs.unlinkSync(path.join(tempDir, f));
-            }
-          });
-        } catch(e){}
+      console.log("[run-code] Executing program: java -cp", reqDir, className);
+      exec(`java -cp "${reqDir}" ${className}`, { timeout: 10000, maxBuffer: 1024 * 512 }, (runErr, runStdout, runStderr) => {
+        console.log("[run-code] Java execution completed.");
+        // Clean up the request subdirectory
+        try { fs.rmSync(reqDir, { recursive: true, force: true }); } catch(e){}
 
         if (runErr) {
+          console.error("[run-code] Execution error:", runStderr || runErr.message);
           return res.json({ success: false, output: runStderr || runErr.message });
         }
+        console.log("[run-code] Execution successful. Output length:", runStdout.length);
         res.json({ success: true, output: runStdout });
       });
     });
   } else if (lang === "python") {
-    const filePath = path.join(tempDir, "solution.py");
+    const filePath = path.join(reqDir, "solution.py");
+    console.log("[run-code] Writing python code to:", filePath);
     fs.writeFileSync(filePath, code, "utf8");
 
     const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    exec(`${pythonCmd} "${filePath}"`, (runErr, runStdout, runStderr) => {
-      try { fs.unlinkSync(filePath); } catch(e){}
+    console.log("[run-code] Executing python command:", pythonCmd, filePath);
+    exec(`${pythonCmd} "${filePath}"`, { timeout: 10000, maxBuffer: 1024 * 512 }, (runErr, runStdout, runStderr) => {
+      console.log("[run-code] Python execution completed.");
+      try { fs.rmSync(reqDir, { recursive: true, force: true }); } catch(e){}
       if (runErr) {
+        console.error("[run-code] Python execution error:", runStderr || runErr.message);
         return res.json({ success: false, output: runStderr || runErr.message });
       }
+      console.log("[run-code] Python execution successful. Output length:", runStdout.length);
       res.json({ success: true, output: runStdout });
     });
   } else {
+    try { fs.rmSync(reqDir, { recursive: true, force: true }); } catch(e){}
+    console.warn("[run-code] Unsupported language:", lang);
     res.status(400).json({ success: false, error: "Unsupported language" });
   }
 });
@@ -456,41 +655,15 @@ app.get("/api/resumes/history", async (req, res) => {
 
 // --- Global Ranking API ---
 
-// GET /api/ranking — public leaderboard (top 50 users by avg resume score)
+// GET /api/ranking — public leaderboard (top 50 users by XP)
 app.get("/api/ranking", async (req, res) => {
   try {
     if (mongoose.connection.readyState !== 1) {
       return res.status(503).json({ success: false, error: "DB not connected" });
     }
 
-    // Aggregate: for each user, pick their best resume score
-    const pipeline = [
-      { $match: { userId: { $ne: null } } },
-      { $sort: { score: -1 } },
-      {
-        $group: {
-          _id: "$userId",
-          bestScore: { $max: "$score" },
-          avgScore: { $avg: "$score" },
-          totalAnalyses: { $sum: 1 },
-          latestAt: { $max: "$analyzedAt" },
-          role: { $first: "$role" }
-        }
-      },
-      { $sort: { bestScore: -1 } },
-      { $limit: 50 },
-      {
-        $lookup: {
-          from: "users",
-          localField: "_id",
-          foreignField: "_id",
-          as: "userInfo"
-        }
-      },
-      { $unwind: { path: "$userInfo", preserveNullAndEmpty: true } }
-    ];
-
-    const results = await Resume.aggregate(pipeline);
+    // Fetch top 50 users by XP descending
+    const users = await User.find({}).sort({ xp: -1 }).limit(50);
 
     // Check if current request is authenticated — to show "you" badge
     const authHeader = req.headers["authorization"];
@@ -500,21 +673,18 @@ app.get("/api/ranking", async (req, res) => {
       try { currentUserId = jwt.verify(token, JWT_SECRET).id; } catch {}
     }
 
-    const leaderboard = results.map((entry, idx) => {
-      const name = entry.userInfo?.name || "Anonymous";
+    const leaderboard = users.map((user, idx) => {
+      const name = user.name || "Anonymous";
       const initials = name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
-      const pts = Math.round((entry.bestScore || 0) * 12.6);
-      const streak = Math.min(entry.totalAnalyses * 2, 21);
       return {
         rank: idx + 1,
-        userId: entry._id?.toString(),
+        userId: user._id.toString(),
         name,
         initials,
-        pts,
-        role: entry.role || "Student",
-        streak,
-        totalAnalyses: entry.totalAnalyses,
-        isCurrentUser: currentUserId && entry._id?.toString() === currentUserId.toString()
+        pts: user.xp || 0,
+        role: "Student",
+        streak: user.streak || 0,
+        isCurrentUser: currentUserId && user._id.toString() === currentUserId.toString()
       };
     });
 
@@ -558,7 +728,8 @@ app.post("/api/auth/register", async (req, res) => {
       user: {
         id: newUser._id,
         name: newUser.name,
-        email: newUser.email
+        email: newUser.email,
+        role: newUser.role
       }
     });
   } catch (err) {
@@ -596,7 +767,8 @@ app.post("/api/auth/login", async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        role: user.role
       }
     });
   } catch (err) {
@@ -631,7 +803,8 @@ app.post("/api/auth/social", async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        role: user.role
       }
     });
   } catch (err) {
@@ -662,11 +835,42 @@ app.get("/api/auth/me", async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        role: user.role
       }
     });
   } catch (err) {
     console.error("Auth check error:", err);
+    res.status(401).json({ success: false, error: "Token is not valid" });
+  }
+});
+
+// POST /api/users/sync-stats — sync XP and login streak to MongoDB
+app.post("/api/users/sync-stats", async (req, res) => {
+  try {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ success: false, error: "No token, authorization denied" });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const { xp, streak } = req.body;
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: "User not found" });
+    }
+
+    if (typeof xp === "number") user.xp = xp;
+    if (typeof streak === "number") user.streak = streak;
+
+    await user.save();
+
+    res.json({ success: true, xp: user.xp, streak: user.streak });
+  } catch (err) {
+    console.error("Sync stats error:", err);
     res.status(401).json({ success: false, error: "Token is not valid" });
   }
 });
@@ -1216,6 +1420,424 @@ Respond with a JSON object that has this exact schema (no markdown block wrapper
     console.error("College analyze error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
+});
+
+// ==========================================
+// RATE LIMITING
+// ==========================================
+const rateLimitMap = new Map();
+const rateLimit = (windowMs, max) => (req, res, next) => {
+  const key = req.ip;
+  const now = Date.now();
+  const windowStart = now - windowMs;
+  
+  if (!rateLimitMap.has(key)) rateLimitMap.set(key, []);
+  const hits = rateLimitMap.get(key).filter(t => t > windowStart);
+  rateLimitMap.set(key, hits);
+  
+  if (hits.length >= max) {
+    return res.status(429).json({ error: "Too many requests. Please try again later." });
+  }
+  hits.push(now);
+  next();
+};
+
+// Apply rate limiting to API routes (100 requests per 15 minutes)
+app.use('/api/', rateLimit(15 * 60 * 1000, 100));
+
+// ==========================================
+// AI STUDY PLAN GENERATOR API
+// ==========================================
+app.post("/api/study-plan", async (req, res) => {
+  try {
+    const { goal, level, hours, weakTopics, daysLeft } = req.body;
+    
+    // Input validation
+    if (!goal || !level || !hours || !daysLeft) {
+      return res.status(400).json({ success: false, error: "Missing required fields: goal, level, hours, daysLeft" });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.json({ success: false, error: "No AI API key configured" });
+    }
+
+    const prompt = `You are an expert academic advisor. Create a detailed ${daysLeft}-day study plan for a student preparing for: ${goal}.
+Current level: ${level}. Available hours per day: ${hours}. Weak topics: ${weakTopics || 'none specified'}.
+
+Return a JSON object with this exact structure:
+{
+  "title": "Plan title",
+  "summary": "2-3 sentence summary",
+  "totalDays": ${Math.min(daysLeft, 30)},
+  "days": [
+    {
+      "day": 1,
+      "phase": "Phase name",
+      "slots": [
+        {"time": "9:00 AM - 11:00 AM", "activity": "Topic description", "type": "study|practice|review|test"}
+      ],
+      "tip": "Daily motivational tip"
+    }
+  ]
+}
+
+Generate a maximum of ${Math.min(daysLeft, 30)} days. Each day should have ${Math.ceil(hours / 2)} time slots of 2 hours each.
+Focus extra time on weak topics. Make tips specific and actionable. Return ONLY valid JSON, no markdown.`;
+
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 8192 }
+        })
+      }
+    );
+
+    if (!geminiRes.ok) {
+      return res.json({ success: false, error: "AI service unavailable" });
+    }
+
+    const geminiData = await geminiRes.json();
+    const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    
+    // Extract JSON from response
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return res.json({ success: false, error: "Could not parse AI response" });
+    }
+
+    const plan = JSON.parse(jsonMatch[0]);
+    res.json({ success: true, plan });
+  } catch (error) {
+    console.error("Study plan generation error:", error.message);
+    res.status(500).json({ success: false, error: "Failed to generate study plan" });
+  }
+});
+
+// ==========================================
+// DSA QUESTION BANK ROUTES
+// ==========================================
+const DSA_DATA_PATH = path.join(__dirname, "data", "dsa_questions.json");
+
+function loadDsaQuestions() {
+  try {
+    const raw = fs.readFileSync(DSA_DATA_PATH, "utf8");
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error("[DSA] Failed to load dsa_questions.json:", e.message);
+    return {};
+  }
+}
+
+function saveDsaQuestions(data) {
+  try {
+    fs.writeFileSync(DSA_DATA_PATH, JSON.stringify(data, null, 2), "utf8");
+    return true;
+  } catch (e) {
+    console.error("[DSA] Failed to save dsa_questions.json:", e.message);
+    return false;
+  }
+}
+
+function recomputeStats(topic) {
+  const groups = topic.difficulties || {};
+  let total = 0, easy = 0, med = 0, hard = 0;
+  for (const groupName in groups) {
+    const qs = groups[groupName];
+    total += qs.length;
+    for (const q of qs) {
+      const d = (q.diff || "").toLowerCase();
+      if (d === "easy") easy++;
+      else if (d === "medium") med++;
+      else if (d === "hard") hard++;
+    }
+  }
+  topic.totalQuestions = total;
+  topic.stats = { easy, med, hard };
+}
+
+// GET /api/dsa/topics — return all topics with their questions
+app.get("/api/dsa/topics", (req, res) => {
+  const topics = loadDsaQuestions();
+  res.json({ success: true, topics });
+});
+
+// POST /api/dsa/questions — add a question to a topic's group
+app.post("/api/dsa/questions", express.json(), (req, res) => {
+  const { topicId, groupName, question } = req.body;
+  if (!topicId || !groupName || !question || !question.name) {
+    return res.status(400).json({ success: false, error: "Missing required fields: topicId, groupName, question.name" });
+  }
+
+  const topics = loadDsaQuestions();
+  if (!topics[topicId]) {
+    return res.status(404).json({ success: false, error: `Topic '${topicId}' not found` });
+  }
+
+  const topic = topics[topicId];
+  if (!topic.difficulties[groupName]) {
+    topic.difficulties[groupName] = [];
+  }
+
+  // Check for duplicate
+  const existing = topic.difficulties[groupName].find(q => q.name === question.name);
+  if (existing) {
+    return res.status(409).json({ success: false, error: `Question '${question.name}' already exists in ${groupName}` });
+  }
+
+  const newQuestion = {
+    name: question.name,
+    diff: question.diff || "Easy",
+    link: question.link || "#",
+    vid: !!question.vid,
+    doc: !!question.doc,
+    prac: !!question.prac
+  };
+
+  topic.difficulties[groupName].push(newQuestion);
+  recomputeStats(topic);
+
+  if (!saveDsaQuestions(topics)) {
+    return res.status(500).json({ success: false, error: "Failed to save question data" });
+  }
+
+  res.json({ success: true, topics });
+});
+
+// DELETE /api/dsa/questions — remove a question from a topic's group
+app.delete("/api/dsa/questions", express.json(), (req, res) => {
+  const { topicId, groupName, questionName } = req.body;
+  if (!topicId || !groupName || !questionName) {
+    return res.status(400).json({ success: false, error: "Missing required fields: topicId, groupName, questionName" });
+  }
+
+  const topics = loadDsaQuestions();
+  if (!topics[topicId]) {
+    return res.status(404).json({ success: false, error: `Topic '${topicId}' not found` });
+  }
+
+  const topic = topics[topicId];
+  const group = topic.difficulties[groupName];
+  if (!group) {
+    return res.status(404).json({ success: false, error: `Group '${groupName}' not found` });
+  }
+
+  const idx = group.findIndex(q => q.name === questionName);
+  if (idx === -1) {
+    return res.status(404).json({ success: false, error: `Question '${questionName}' not found` });
+  }
+
+  group.splice(idx, 1);
+  recomputeStats(topic);
+
+  if (!saveDsaQuestions(topics)) {
+    return res.status(500).json({ success: false, error: "Failed to save question data" });
+  }
+
+  res.json({ success: true, topics });
+});
+
+const Feedback = require("./models/feedback");
+const http = require("http");
+
+// Admin auth helper middleware
+const verifyAdmin = async (req, res, next) => {
+  try {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ success: false, error: "No token, authorization denied" });
+    }
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (!user || user.role !== "admin") {
+      return res.status(403).json({ success: false, error: "Admin access denied" });
+    }
+    req.user = user;
+    next();
+  } catch (err) {
+    console.error("Admin verification error:", err);
+    res.status(401).json({ success: false, error: "Token is not valid" });
+  }
+};
+
+// ==========================================
+// FEEDBACK & BUG REPORTS ENDPOINTS
+// ==========================================
+
+// Submit feedback (Public/Student)
+app.post("/api/feedback", express.json(), async (req, res) => {
+  try {
+    const { name, email, type, message } = req.body;
+    if (!name || !email || !type || !message) {
+      return res.status(400).json({ success: false, error: "Please enter all required fields" });
+    }
+
+    // Check optional token for userId
+    let userId = null;
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        userId = decoded.id;
+      } catch (e) {
+        // Ignore token error, allow anonymous
+      }
+    }
+
+    const feedback = new Feedback({
+      userId,
+      name,
+      email,
+      type,
+      message
+    });
+
+    await feedback.save();
+    res.status(201).json({ success: true, feedback });
+  } catch (err) {
+    console.error("Submit feedback error:", err);
+    res.status(500).json({ success: false, error: "Server error submitting feedback" });
+  }
+});
+
+// Retrieve all feedback (Admin Only)
+app.get("/api/feedback", verifyAdmin, async (req, res) => {
+  try {
+    const feedbacks = await Feedback.find().sort({ createdAt: -1 });
+    res.json({ success: true, feedbacks });
+  } catch (err) {
+    console.error("Get feedbacks error:", err);
+    res.status(500).json({ success: false, error: "Server error fetching feedbacks" });
+  }
+});
+
+// Toggle resolved status of feedback (Admin Only)
+app.put("/api/feedback/:id", verifyAdmin, async (req, res) => {
+  try {
+    const feedback = await Feedback.findById(req.params.id);
+    if (!feedback) {
+      return res.status(404).json({ success: false, error: "Feedback not found" });
+    }
+    feedback.status = feedback.status === "resolved" ? "open" : "resolved";
+    await feedback.save();
+    res.json({ success: true, feedback });
+  } catch (err) {
+    console.error("Update feedback error:", err);
+    res.status(500).json({ success: false, error: "Server error updating feedback" });
+  }
+});
+
+// Delete feedback (Admin Only)
+app.delete("/api/feedback/:id", verifyAdmin, async (req, res) => {
+  try {
+    const feedback = await Feedback.findByIdAndDelete(req.params.id);
+    if (!feedback) {
+      return res.status(404).json({ success: false, error: "Feedback not found" });
+    }
+    res.json({ success: true, message: "Feedback deleted successfully" });
+  } catch (err) {
+    console.error("Delete feedback error:", err);
+    res.status(500).json({ success: false, error: "Server error deleting feedback" });
+  }
+});
+
+// ==========================================
+// SYSTEM HEALTH & API STATUS ENDPOINT (Admin Only)
+// ==========================================
+app.get("/api/admin/system-health", verifyAdmin, async (req, res) => {
+  try {
+    // 1. Check MongoDB connection state
+    const dbState = mongoose.connection.readyState;
+    const dbStatus = dbState === 1 ? "connected" : "disconnected";
+
+    // 2. Check Flask Chatbot App Server (ping port 5002)
+    let chatbotStatus = "inactive";
+    let chatbotError = null;
+    
+    const checkChatbot = () => {
+      return new Promise((resolve) => {
+        const pingReq = http.get("http://127.0.0.1:5002", (pingRes) => {
+          chatbotStatus = pingRes.statusCode >= 200 && pingRes.statusCode < 500 ? "active" : "inactive";
+          resolve();
+        });
+        pingReq.on("error", (e) => {
+          chatbotStatus = "inactive";
+          chatbotError = e.message;
+          resolve();
+        });
+        pingReq.setTimeout(400); // 400ms timeout
+        pingReq.on("timeout", () => {
+          pingReq.destroy();
+          chatbotStatus = "timeout";
+          resolve();
+        });
+      });
+    };
+    
+    await checkChatbot();
+
+    // 3. Check environment configuration values
+    const hasGeminiKey = !!process.env.GEMINI_API_KEY;
+    const hasHfToken = !!process.env.HF_TOKEN;
+
+    // 4. Server details
+    const uptime = process.uptime();
+    const memory = process.memoryUsage();
+    
+    res.json({
+      success: true,
+      health: {
+        database: {
+          status: dbStatus,
+          readyState: dbState
+        },
+        chatbot: {
+          status: chatbotStatus,
+          error: chatbotError
+        },
+        apis: {
+          gemini: hasGeminiKey ? "configured" : "missing",
+          huggingface: hasHfToken ? "configured" : "missing"
+        },
+        server: {
+          platform: process.platform,
+          nodeVersion: process.version,
+          uptime: Math.floor(uptime),
+          memoryUsage: {
+            rss: Math.round(memory.rss / (1024 * 1024)), // MB
+            heapTotal: Math.round(memory.heapTotal / (1024 * 1024)), // MB
+            heapUsed: Math.round(memory.heapUsed / (1024 * 1024)) // MB
+          }
+        }
+      }
+    });
+  } catch (err) {
+    console.error("System health check error:", err);
+    res.status(500).json({ success: false, error: "Server error during health check" });
+  }
+});
+
+
+// ==========================================
+// 404 FALLBACK (must be last route)
+// ==========================================
+app.use((req, res) => {
+  // For API routes, return JSON 404
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: "Endpoint not found" });
+  }
+  // For page routes, serve 404 page
+  const page404 = path.join(__dirname, "../f/404.html");
+  if (fs.existsSync(page404)) {
+    return res.status(404).sendFile(page404);
+  }
+  res.status(404).send("Page not found");
 });
 
 const port = process.env.PORT || 5000;

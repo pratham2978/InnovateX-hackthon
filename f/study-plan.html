@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYNAPSE — AI Study Plan Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&family=Fira+Code:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/shared.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0A0A0A">
+    <meta property="og:title" content="SYNAPSE — AI Study Plan Generator">
+    <meta property="og:description" content="Generate a personalized day-by-day study plan powered by AI.">
+
+    <style type="text/tailwindcss">
+        @theme {
+            --color-brand-bg: #0A0A0A;
+            --color-brand-card: #111111;
+            --color-brand-text: #F5F5F5;
+            --color-brand-red: #D90429;
+            --color-brand-red-light: #E63946;
+            --color-brand-orange: #C97B3D;
+            --color-brand-orange-light: #D08B4E;
+            --color-brand-border: #222222;
+            --font-display: 'Plus Jakarta Sans', sans-serif;
+            --font-sans: 'Inter', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen bg-brand-bg text-brand-text selection:bg-brand-orange selection:text-white" id="app-body">
+    <div class="grid-overlay"></div>
+    <canvas id="canvas-synapse" class="fixed inset-0 w-full h-full -z-20 pointer-events-none opacity-20"></canvas>
+    <div id="glow-1" class="glow-bg w-[600px] h-[600px] top-[10%] left-[20%] bg-brand-orange/30"></div>
+
+    <nav class="sticky top-0 z-50 w-full px-6 py-4 border-b border-brand-border bg-brand-bg/60 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3 group cursor-pointer" onclick="window.location.href='index.html'">
+                <span class="text-xl font-bold tracking-wider text-white brand-font">SYNAPSE</span>
+            </div>
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-400">
+                <a href="index.html" class="hover:text-white transition-colors">Home</a>
+                <a href="features.html" class="hover:text-white transition-colors">Features</a>
+                <a href="analytics.html" class="hover:text-white transition-colors">Analytics</a>
+                <a href="global-ranking.html" class="hover:text-white transition-colors">Global Ranking</a>
+            </div>
+            <div class="flex items-center gap-4" id="nav-auth-container">
+                <button onclick="window.location.href='auth.html'" class="text-sm font-medium text-neutral-300 hover:text-white transition-colors cursor-pointer">Log In</button>
+            </div>
+        </div>
+    </nav>
+    <script src="js/auth-guard.js"></script>
+
+    <main class="py-12 px-6 max-w-4xl mx-auto relative z-10">
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-brand-orange/30 bg-brand-orange/10 text-brand-orange text-xs font-semibold tracking-wider uppercase mb-4">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> AI-Powered
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-none">
+                Personalized <span class="bg-gradient-to-r from-brand-orange via-brand-red to-purple-500 bg-clip-text text-transparent">Study Plan</span>
+            </h1>
+            <p class="text-neutral-400 font-light text-sm max-w-xl mx-auto mt-3">
+                Tell us about your goals and timeline, and our AI will generate a detailed day-by-day preparation roadmap.
+            </p>
+        </div>
+
+        <!-- Input Form -->
+        <div class="glass-card rounded-2xl p-8 mb-8">
+            <form id="study-plan-form" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-white mb-2"><i class="fa-solid fa-bullseye text-brand-orange mr-1.5"></i>Your Goal</label>
+                        <select id="goal" class="w-full bg-[#0d0d0d] border border-neutral-800 rounded-xl p-3 text-sm text-neutral-300 focus:border-brand-orange focus:outline-none transition-all">
+                            <option value="placement">Campus Placement Preparation</option>
+                            <option value="gate">GATE Exam</option>
+                            <option value="maang">MAANG Interview Prep</option>
+                            <option value="college">College Semester Exam</option>
+                            <option value="freelance">Freelancing Career</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-white mb-2"><i class="fa-solid fa-calendar text-brand-orange mr-1.5"></i>Target Date</label>
+                        <input type="date" id="target-date" class="w-full bg-[#0d0d0d] border border-neutral-800 rounded-xl p-3 text-sm text-neutral-300 focus:border-brand-orange focus:outline-none transition-all">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-white mb-2"><i class="fa-solid fa-layer-group text-brand-orange mr-1.5"></i>Current Level</label>
+                        <select id="level" class="w-full bg-[#0d0d0d] border border-neutral-800 rounded-xl p-3 text-sm text-neutral-300 focus:border-brand-orange focus:outline-none transition-all">
+                            <option value="beginner">Beginner (Just starting)</option>
+                            <option value="intermediate" selected>Intermediate (Know basics)</option>
+                            <option value="advanced">Advanced (Need polishing)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-white mb-2"><i class="fa-solid fa-clock text-brand-orange mr-1.5"></i>Hours Per Day</label>
+                        <select id="hours" class="w-full bg-[#0d0d0d] border border-neutral-800 rounded-xl p-3 text-sm text-neutral-300 focus:border-brand-orange focus:outline-none transition-all">
+                            <option value="2">2 hours</option>
+                            <option value="4" selected>4 hours</option>
+                            <option value="6">6 hours</option>
+                            <option value="8">8+ hours (Full-time)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-white mb-2"><i class="fa-solid fa-triangle-exclamation text-brand-orange mr-1.5"></i>Weak Topics (comma separated)</label>
+                    <input type="text" id="weak-topics" placeholder="e.g., Dynamic Programming, System Design, SQL, React" class="w-full bg-[#0d0d0d] border border-neutral-800 rounded-xl p-3 text-sm text-neutral-300 placeholder-neutral-700 focus:border-brand-orange focus:outline-none transition-all">
+                </div>
+
+                <button type="submit" id="generate-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-brand-orange to-brand-red hover:from-brand-orange-light hover:to-brand-red-light text-white font-bold text-sm tracking-wide shadow-lg shadow-brand-red/10 transition-all cursor-pointer flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Generate My Study Plan
+                </button>
+            </form>
+        </div>
+
+        <!-- Loading Skeleton -->
+        <div id="loading-skeleton" class="hidden space-y-4 mb-8">
+            <div class="glass-card rounded-2xl p-6">
+                <div class="skeleton h-6 w-48 mb-4"></div>
+                <div class="skeleton h-4 w-full mb-3"></div>
+                <div class="skeleton h-4 w-3/4 mb-3"></div>
+                <div class="skeleton h-4 w-5/6"></div>
+            </div>
+            <div class="glass-card rounded-2xl p-6">
+                <div class="skeleton h-6 w-32 mb-4"></div>
+                <div class="skeleton h-20 w-full mb-3"></div>
+                <div class="skeleton h-20 w-full"></div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="plan-results" class="hidden space-y-6">
+            <!-- Summary card -->
+            <div class="glass-card rounded-2xl p-6 border border-brand-orange/20 bg-brand-orange/5">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-xl bg-brand-orange/15 flex items-center justify-center">
+                        <i class="fa-solid fa-brain text-brand-orange text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white" id="plan-title">Your Custom Study Plan</h3>
+                        <p class="text-[10px] text-neutral-400" id="plan-subtitle">Generated just for you</p>
+                    </div>
+                </div>
+                <p class="text-xs text-neutral-300 leading-relaxed" id="plan-summary"></p>
+            </div>
+
+            <!-- Day-by-day plan -->
+            <div id="plan-days-container" class="space-y-4">
+                <!-- Dynamically injected -->
+            </div>
+
+            <!-- Export button -->
+            <div class="flex gap-4">
+                <button onclick="exportPlanAsText()" class="flex-1 py-3 rounded-xl bg-brand-card border border-brand-border text-neutral-300 hover:text-white hover:border-neutral-600 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-download"></i> Export as Text
+                </button>
+                <button onclick="copyPlanToClipboard()" class="flex-1 py-3 rounded-xl bg-brand-card border border-brand-border text-neutral-300 hover:text-white hover:border-neutral-600 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-copy"></i> Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/synapse-canvas.js"></script>
+    <script src="js/navbar-auth.js"></script>
+    <script>
+        // Set default target date to 30 days from now
+        const defaultDate = new Date();
+        defaultDate.setDate(defaultDate.getDate() + 30);
+        document.getElementById('target-date').value = defaultDate.toISOString().split('T')[0];
+
+        let generatedPlan = null;
+
+        document.getElementById('study-plan-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const goal = document.getElementById('goal').value;
+            const targetDate = document.getElementById('target-date').value;
+            const level = document.getElementById('level').value;
+            const hours = document.getElementById('hours').value;
+            const weakTopics = document.getElementById('weak-topics').value;
+
+            const btn = document.getElementById('generate-btn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+            btn.disabled = true;
+
+            document.getElementById('loading-skeleton').classList.remove('hidden');
+            document.getElementById('plan-results').classList.add('hidden');
+
+            // Calculate days until target
+            const daysLeft = Math.max(1, Math.ceil((new Date(targetDate) - new Date()) / 86400000));
+
+            // Generate plan (using Gemini API if available, otherwise smart fallback)
+            try {
+                const plan = await generateStudyPlan(goal, level, hours, weakTopics, daysLeft);
+                generatedPlan = plan;
+                renderPlan(plan, goal, daysLeft, hours);
+                
+                // Award XP for generating a plan
+                if (typeof awardXP === 'function') awardXP('study_session');
+            } catch (err) {
+                console.error(err);
+                if (typeof showToast === 'function') showToast('Failed to generate plan. Using offline template.', '#ef4444');
+            }
+
+            document.getElementById('loading-skeleton').classList.add('hidden');
+            btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Generate My Study Plan';
+            btn.disabled = false;
+        });
+
+        async function generateStudyPlan(goal, level, hours, weakTopics, daysLeft) {
+            // Try backend Gemini API first
+            try {
+                const response = await fetch(`${SYNAPSE_BACKEND}/api/study-plan`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ goal, level, hours, weakTopics, daysLeft })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.plan) return data.plan;
+                }
+            } catch (e) {
+                console.log('Backend unavailable, using offline plan generation');
+            }
+
+            // Smart offline fallback
+            return generateOfflinePlan(goal, level, hours, weakTopics, daysLeft);
+        }
+
+        function generateOfflinePlan(goal, level, hours, weakTopics, daysLeft) {
+            const goalLabels = {
+                placement: 'Campus Placement',
+                gate: 'GATE Exam',
+                maang: 'MAANG Interview',
+                college: 'Semester Exam',
+                freelance: 'Freelancing Career'
+            };
+
+            const topics = weakTopics ? weakTopics.split(',').map(t => t.trim()).filter(Boolean) : ['Data Structures', 'Algorithms', 'System Design'];
+            
+            const scheduleTemplates = {
+                placement: [
+                    { phase: 'Foundation', topics: ['Arrays & Strings', 'Linked Lists', 'Stacks & Queues', 'Trees & Graphs'], ratio: 0.3 },
+                    { phase: 'Core DSA', topics: ['Sorting & Searching', 'Dynamic Programming', 'Greedy Algorithms', 'Backtracking'], ratio: 0.35 },
+                    { phase: 'Advanced + Interview', topics: ['System Design Basics', 'OOD Patterns', 'Mock Interviews', 'Behavioral Prep'], ratio: 0.25 },
+                    { phase: 'Revision & Mock Tests', topics: ['Company-wise Tests', 'Full Mock Rounds', 'Resume Polish', 'Final Review'], ratio: 0.1 }
+                ],
+                maang: [
+                    { phase: 'Pattern Mastery', topics: ['Two Pointers', 'Sliding Window', 'Binary Search Patterns', 'BFS/DFS'], ratio: 0.3 },
+                    { phase: 'Hard Problems', topics: ['Dynamic Programming', 'Graph Algorithms', 'Trie & Advanced DS', 'Math & Bit Manipulation'], ratio: 0.35 },
+                    { phase: 'System Design', topics: ['HLD Fundamentals', 'LLD & OOD', 'Distributed Systems', 'Scalability Patterns'], ratio: 0.25 },
+                    { phase: 'Mock Rounds', topics: ['Timed Contests', 'Phone Screen Practice', 'On-site Simulation', 'Behavioral STAR Method'], ratio: 0.1 }
+                ],
+                college: [
+                    { phase: 'Syllabus Coverage', topics: ['Unit 1 & 2 Core', 'Unit 3 & 4 Topics', 'Lab Practicals', 'Assignment Review'], ratio: 0.4 },
+                    { phase: 'Deep Dive', topics: ['Numerical Problems', 'Derivations', 'Diagram Practice', 'Theory Memorization'], ratio: 0.3 },
+                    { phase: 'PYQ Solving', topics: ['Last 3 Years Papers', 'Pattern Analysis', 'Time-bound Practice', 'Weak Area Focus'], ratio: 0.2 },
+                    { phase: 'Final Revision', topics: ['Formula Sheet', 'Quick Notes Review', 'Mock Test', 'Last Day Strategy'], ratio: 0.1 }
+                ],
+                gate: [
+                    { phase: 'Core Subjects', topics: ['Data Structures', 'Algorithms', 'OS & DBMS', 'CN & TOC'], ratio: 0.35 },
+                    { phase: 'Problem Solving', topics: ['Previous Year GATE', 'Topic-wise Questions', 'Aptitude', 'Engineering Math'], ratio: 0.3 },
+                    { phase: 'Mock Tests', topics: ['Full-length Mocks', 'Section Tests', 'Speed Optimization', 'Error Analysis'], ratio: 0.25 },
+                    { phase: 'Revision', topics: ['Formula Sheets', 'Key Theorems', 'Weak Areas', 'Final Mock'], ratio: 0.1 }
+                ],
+                freelance: [
+                    { phase: 'Tech Stack', topics: ['Frontend (React/Next)', 'Backend (Node/Express)', 'Database (MongoDB/SQL)', 'DevOps Basics'], ratio: 0.35 },
+                    { phase: 'Portfolio Building', topics: ['Project 1: Full-stack App', 'Project 2: API Service', 'GitHub Profile', 'Personal Website'], ratio: 0.3 },
+                    { phase: 'Business Skills', topics: ['Client Communication', 'Proposal Writing', 'Pricing Strategy', 'Platform Profiles'], ratio: 0.2 },
+                    { phase: 'Launch', topics: ['Upwork/Fiverr Setup', 'First Proposals', 'Networking', 'Portfolio Review'], ratio: 0.15 }
+                ]
+            };
+
+            const template = scheduleTemplates[goal] || scheduleTemplates.placement;
+            const days = [];
+            let dayCounter = 1;
+
+            template.forEach((phase) => {
+                const phaseDays = Math.max(1, Math.round(daysLeft * phase.ratio));
+                const topicsPerDay = Math.ceil(phase.topics.length / phaseDays);
+                
+                for (let i = 0; i < phaseDays && dayCounter <= daysLeft; i++) {
+                    const dayTopics = phase.topics.slice(
+                        (i * topicsPerDay) % phase.topics.length,
+                        ((i * topicsPerDay) % phase.topics.length) + Math.min(2, topicsPerDay)
+                    );
+                    
+                    // Add weak topics focus periodically
+                    const weakFocus = topics.length > 0 ? topics[dayCounter % topics.length] : null;
+
+                    const slots = [];
+                    const h = parseInt(hours);
+                    if (h >= 2) slots.push({ time: '9:00 AM - 11:00 AM', activity: dayTopics[0] || phase.topics[0], type: 'study' });
+                    if (h >= 4) slots.push({ time: '11:30 AM - 1:30 PM', activity: dayTopics[1] || 'Problem Solving Practice', type: 'practice' });
+                    if (h >= 6) slots.push({ time: '3:00 PM - 5:00 PM', activity: weakFocus ? `Weak Area: ${weakFocus}` : 'Review & Notes', type: 'review' });
+                    if (h >= 8) slots.push({ time: '6:00 PM - 8:00 PM', activity: 'Mock Test / Project Work', type: 'test' });
+
+                    days.push({
+                        day: dayCounter,
+                        phase: phase.phase,
+                        slots,
+                        tip: getSmartTip(dayCounter, phase.phase, goal)
+                    });
+                    dayCounter++;
+                }
+            });
+
+            return {
+                title: `${goalLabels[goal]} Study Plan`,
+                summary: `A ${daysLeft}-day personalized roadmap for ${goalLabels[goal]} preparation. Optimized for ${hours} hours/day at ${level} level. ${topics.length > 0 ? `Special focus on: ${topics.join(', ')}.` : ''}`,
+                totalDays: Math.min(dayCounter - 1, daysLeft),
+                days: days.slice(0, daysLeft)
+            };
+        }
+
+        function getSmartTip(day, phase, goal) {
+            const tips = [
+                '💡 Focus on understanding concepts, not memorizing code.',
+                '🎯 Practice explaining your approach out loud — it helps in interviews.',
+                '📝 Write down key formulas and patterns in a notebook.',
+                '⏰ Use the Pomodoro technique: 25 min focus, 5 min break.',
+                '🔁 Review yesterday\'s problems before starting new ones.',
+                '💪 Consistency beats intensity. Show up every day.',
+                '🧠 Teach a concept to someone — best way to learn.',
+                '📊 Track your progress in the Analytics dashboard.',
+                '🎮 Take breaks! Your brain needs rest to consolidate learning.',
+                '🏆 You\'re closer to your goal than you think. Keep going!'
+            ];
+            return tips[day % tips.length];
+        }
+
+        function renderPlan(plan, goal, daysLeft, hours) {
+            document.getElementById('plan-title').textContent = plan.title;
+            document.getElementById('plan-subtitle').textContent = `${plan.totalDays} days · ${hours} hrs/day · Starts today`;
+            document.getElementById('plan-summary').textContent = plan.summary;
+
+            const container = document.getElementById('plan-days-container');
+            container.innerHTML = '';
+
+            let currentPhase = '';
+
+            plan.days.forEach((day) => {
+                // Phase header
+                if (day.phase !== currentPhase) {
+                    currentPhase = day.phase;
+                    const phaseHeader = document.createElement('div');
+                    phaseHeader.className = 'flex items-center gap-3 mt-6 mb-2';
+                    phaseHeader.innerHTML = `
+                        <div class="h-px flex-grow bg-brand-border"></div>
+                        <span class="text-[10px] font-bold text-brand-orange uppercase tracking-widest px-3 py-1 rounded-full border border-brand-orange/20 bg-brand-orange/5">${currentPhase}</span>
+                        <div class="h-px flex-grow bg-brand-border"></div>
+                    `;
+                    container.appendChild(phaseHeader);
+                }
+
+                const card = document.createElement('div');
+                card.className = 'glass-card rounded-xl p-5 hover:border-brand-orange/20 transition-all';
+                
+                const slotsHtml = day.slots.map(slot => {
+                    const typeColors = {
+                        study: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
+                        practice: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
+                        review: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
+                        test: 'text-amber-400 bg-amber-400/10 border-amber-400/20'
+                    };
+                    const color = typeColors[slot.type] || typeColors.study;
+                    return `
+                        <div class="flex items-center gap-3 py-2">
+                            <span class="text-[10px] font-mono text-neutral-500 w-[130px] flex-shrink-0">${slot.time}</span>
+                            <span class="text-xs font-semibold text-white flex-1">${slot.activity}</span>
+                            <span class="text-[9px] font-bold uppercase px-2 py-0.5 rounded border ${color}">${slot.type}</span>
+                        </div>
+                    `;
+                }).join('');
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-brand-orange/10 border border-brand-orange/20 flex items-center justify-center text-brand-orange text-xs font-bold font-mono">${day.day}</div>
+                            <span class="text-xs font-bold text-white">Day ${day.day}</span>
+                        </div>
+                        <span class="text-[9px] text-neutral-500 font-mono">${new Date(Date.now() + (day.day - 1) * 86400000).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                    </div>
+                    <div class="divide-y divide-neutral-900">${slotsHtml}</div>
+                    <div class="mt-3 pt-3 border-t border-neutral-900 text-[10px] text-neutral-400 italic">${day.tip}</div>
+                `;
+                container.appendChild(card);
+            });
+
+            document.getElementById('plan-results').classList.remove('hidden');
+            document.getElementById('plan-results').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function exportPlanAsText() {
+            if (!generatedPlan) return;
+            let text = `${generatedPlan.title}\n${'='.repeat(40)}\n${generatedPlan.summary}\n\n`;
+            generatedPlan.days.forEach(day => {
+                text += `\n--- Day ${day.day} (${day.phase}) ---\n`;
+                day.slots.forEach(slot => {
+                    text += `  ${slot.time} → ${slot.activity} [${slot.type}]\n`;
+                });
+                text += `  Tip: ${day.tip}\n`;
+            });
+            
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'synapse-study-plan.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+            if (typeof showToast === 'function') showToast('Study plan exported!');
+        }
+
+        function copyPlanToClipboard() {
+            if (!generatedPlan) return;
+            let text = `${generatedPlan.title}\n${generatedPlan.summary}\n\n`;
+            generatedPlan.days.forEach(day => {
+                text += `Day ${day.day} (${day.phase}):\n`;
+                day.slots.forEach(slot => {
+                    text += `  ${slot.time} → ${slot.activity}\n`;
+                });
+                text += '\n';
+            });
+            navigator.clipboard.writeText(text).then(() => {
+                if (typeof showToast === 'function') showToast('Copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>

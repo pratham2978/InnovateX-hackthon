@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SYNAPSE — InnovateX 2026 Presentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800;900&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #C97B3D;
+    --red: #D90429;
+    --bg: #080808;
+    --card: #111111;
+    --border: #222222;
+    --text: #F5F5F5;
+    --muted: #888888;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #fff;
+    color: #111;
+    font-size: 11pt;
+    line-height: 1.55;
+  }
+
+  /* ===== PAGE SETUP ===== */
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    background: #fff;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+  }
+
+  /* ===== COVER PAGE ===== */
+  .cover {
+    background: linear-gradient(135deg, #080808 0%, #111 40%, #1a0a00 100%);
+    color: #F5F5F5;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 40px;
+    position: relative;
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 30%, rgba(201,123,61,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 80% 70%, rgba(217,4,41,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Grid overlay */
+  .cover::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-size: 30px 30px;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+    pointer-events: none;
+  }
+
+  .cover-inner { position: relative; z-index: 1; }
+
+  .hackathon-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 100px;
+    border: 1px solid rgba(201,123,61,0.5);
+    background: rgba(201,123,61,0.12);
+    color: #C97B3D;
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  .cover h1 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 56pt;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .cover h1 span {
+    background: linear-gradient(90deg, #C97B3D, #D90429, #9333ea);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .cover-tagline {
+    font-size: 13pt;
+    color: rgba(245,245,245,0.6);
+    font-weight: 300;
+    max-width: 400px;
+    margin: 12px auto 36px;
+    line-height: 1.6;
+  }
+
+  .cover-divider {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, #C97B3D, #D90429);
+    border-radius: 2px;
+    margin: 0 auto 36px;
+  }
+
+  .cover-meta {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .cover-meta-item { text-align: center; }
+  .cover-meta-label {
+    font-size: 7pt;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .cover-meta-value {
+    font-size: 11pt;
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .cover-features-preview {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 40px;
+  }
+
+  .feat-chip {
+    padding: 5px 14px;
+    border-radius: 100px;
+    font-size: 8pt;
+    font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.05);
+  }
+
+  /* ===== CONTENT PAGES ===== */
+  .content-page {
+    padding: 36px 42px;
+    background: #fff;
+    color: #1a1a1a;
+  }
+
+  /* Page header stripe */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #f0f0f0;
+    margin-bottom: 28px;
+  }
+
+  .page-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .page-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #C97B3D, #D90429);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .page-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 15pt;
+    font-weight: 800;
+    color: #111;
+    letter-spacing: -0.3px;
+  }
+
+  .page-subtitle {
+    font-size: 8pt;
+    color: #888;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .page-brand {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 9pt;
+    font-weight: 800;
+    color: #C97B3D;
+    letter-spacing: 1px;
+  }
+
+  /* ===== SECTION STYLES ===== */
+  .section-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11pt;
+    font-weight: 800;
+    color: #111;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #eee;
+  }
+
+  .orange { color: #C97B3D; }
+  .red { color: #D90429; }
+
+  /* ===== PROBLEM STATEMENT ===== */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 14px;
+  }
+
+  .problem-card {
+    padding: 16px;
+    border-radius: 10px;
+    border-left: 3px solid #D90429;
+    background: #fdf4f4;
+  }
+
+  .problem-card h4 {
+    font-size: 9pt;
+    font-weight: 700;
+    color: #D90429;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .problem-card p {
+    font-size: 9pt;
+    color: #444;
+    line-height: 1.5;
+  }
+
+  .stat-row {
+    display: flex;
+    gap: 14px;
+    margin-top: 18px;
+  }
+
+  .stat-box {
+    flex: 1;
+    text-align: center;
+    padding: 16px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #C97B3D15, #D9042910);
+    border: 1px solid #C97B3D30;
+  }
+
+  .stat-box .stat-num {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 22pt;
+    font-weight: 900;
+    color: #C97B3D;
+    line-height: 1;
+  }
+
+  .stat-box .stat-label {
+    font-size: 8pt;
+    color: #666;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  /* ===== SOLUTION ===== */
+  .solution-hero {
+    background: linear-gradient(135deg, #080808, #1a0a00);
+    border-radius: 14px;
+    padding: 24px 28px;
+    color: #fff;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .solution-hero::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(201,123,61,0.2) 0%, transparent 70%);
+  }
+
+  .solution-hero h3 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 16pt;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 8px;
+    position: relative;
+  }
+
+  .solution-hero h3 span {
+    background: linear-gradient(90deg, #C97B3D, #D90429);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .solution-hero p {
+    font-size: 9.5pt;
+    color: rgba(255,255,255,0.65);
+    max-width: 480px;
+    line-height: 1.6;
+    position: relative;
+  }
+
+  .pillars-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .pillar {
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid #e8e8e8;
+    background: #fafafa;
+    text-align: center;
+  }
+
+  .pillar-icon {
+    font-size: 20px;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .pillar h4 {
+    font-size: 9pt;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 5px;
+  }
+
+  .pillar p {
+    font-size: 8pt;
+    color: #666;
+    line-height: 1.45;
+  }
+
+  /* ===== FEATURES ===== */
+  .features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .feature-card {
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    background: #fafafa;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .feature-icon-wrap {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    margin-top: 1px;
+  }
+
+  .bg-orange { background: #C97B3D18; }
+  .bg-red { background: #D9042918; }
+  .bg-blue { background: #3b82f618; }
+  .bg-green { background: #10b98118; }
+  .bg-purple { background: #9333ea18; }
+  .bg-yellow { background: #f59e0b18; }
+
+  .feature-card h4 {
+    font-size: 9pt;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 3px;
+  }
+
+  .feature-card p {
+    font-size: 8pt;
+    color: #555;
+    line-height: 1.45;
+  }
+
+  .feature-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 100px;
+    font-size: 7pt;
+    font-weight: 700;
+    margin-top: 5px;
+  }
+
+  .badge-orange { background: #C97B3D20; color: #C97B3D; }
+  .badge-green { background: #10b98120; color: #10b981; }
+  .badge-purple { background: #9333ea20; color: #9333ea; }
+  .badge-blue { background: #3b82f620; color: #3b82f6; }
+
+  /* ===== TECH STACK ===== */
+  .tech-section {
+    margin-bottom: 18px;
+  }
+
+  .tech-section h4 {
+    font-size: 8.5pt;
+    font-weight: 700;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+
+  .tech-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .tech-chip {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 8.5pt;
+    font-weight: 600;
+    font-family: 'Fira Code', monospace;
+    border: 1px solid #ddd;
+    background: #f8f8f8;
+    color: #333;
+  }
+
+  .tech-chip.primary {
+    background: #C97B3D12;
+    border-color: #C97B3D40;
+    color: #C97B3D;
+  }
+
+  .tech-chip.ai {
+    background: #9333ea12;
+    border-color: #9333ea40;
+    color: #9333ea;
+  }
+
+  .tech-chip.db {
+    background: #10b98112;
+    border-color: #10b98140;
+    color: #10b981;
+  }
+
+  .tech-chip.python {
+    background: #3b82f612;
+    border-color: #3b82f640;
+    color: #3b82f6;
+  }
+
+  /* ===== ARCHITECTURE ===== */
+  .arch-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 10px 0;
+  }
+
+  .arch-layer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .arch-label {
+    width: 90px;
+    font-size: 7.5pt;
+    font-weight: 700;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .arch-boxes {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .arch-box {
+    flex: 1;
+    padding: 9px 10px;
+    border-radius: 8px;
+    font-size: 8pt;
+    font-weight: 600;
+    text-align: center;
+    border: 1px solid;
+  }
+
+  .arch-box.front { background: #C97B3D10; border-color: #C97B3D35; color: #8a4e1a; }
+  .arch-box.back  { background: #3b82f610; border-color: #3b82f635; color: #1d4ed8; }
+  .arch-box.ai    { background: #9333ea10; border-color: #9333ea35; color: #6b21a8; }
+  .arch-box.db    { background: #10b98110; border-color: #10b98135; color: #065f46; }
+  .arch-box.ml    { background: #f59e0b10; border-color: #f59e0b35; color: #92400e; }
+
+  .arch-arrow {
+    text-align: center;
+    color: #bbb;
+    font-size: 9pt;
+    margin: -4px 0;
+  }
+
+  /* ===== PROGRESS ===== */
+  .progress-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+
+  .progress-table th {
+    background: #111;
+    color: #fff;
+    font-size: 8pt;
+    font-weight: 700;
+    padding: 9px 12px;
+    text-align: left;
+  }
+
+  .progress-table th:first-child { border-radius: 6px 0 0 6px; }
+  .progress-table th:last-child { border-radius: 0 6px 6px 0; }
+
+  .progress-table td {
+    padding: 9px 12px;
+    font-size: 8.5pt;
+    color: #333;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .progress-table tr:last-child td { border-bottom: none; }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 100px;
+    font-size: 7.5pt;
+    font-weight: 700;
+  }
+
+  .status-done { background: #10b98120; color: #065f46; }
+  .status-wip  { background: #f59e0b20; color: #92400e; }
+  .status-plan { background: #6b728020; color: #374151; }
+
+  .progress-bar-wrap {
+    background: #eee;
+    border-radius: 100px;
+    height: 5px;
+    width: 80px;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 8px;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, #C97B3D, #D90429);
+  }
+
+  /* ===== FUTURE SCOPE ===== */
+  .future-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .future-item {
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px dashed #ddd;
+    background: #fdfdfd;
+    text-align: center;
+  }
+
+  .future-icon { font-size: 22px; display: block; margin-bottom: 8px; }
+
+  .future-item h4 {
+    font-size: 9pt;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 4px;
+  }
+
+  .future-item p { font-size: 8pt; color: #666; line-height: 1.45; }
+
+  /* ===== TEAM PAGE ===== */
+  .team-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .team-card {
+    padding: 18px 20px;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    background: #fafafa;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .team-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #C97B3D, #D90429);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 900;
+    font-size: 16pt;
+    flex-shrink: 0;
+  }
+
+  .team-card h4 {
+    font-size: 10pt;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 3px;
+  }
+
+  .team-role {
+    font-size: 8pt;
+    color: #C97B3D;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .team-card p {
+    font-size: 8pt;
+    color: #555;
+    line-height: 1.45;
+  }
+
+  .team-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-size: 7pt;
+    font-weight: 600;
+    background: #11111108;
+    border: 1px solid #ddd;
+    color: #555;
+    margin: 2px 2px 0 0;
+  }
+
+  /* ===== FOOTER ===== */
+  .page-footer {
+    position: absolute;
+    bottom: 20px;
+    left: 42px;
+    right: 42px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 7.5pt;
+    color: #bbb;
+    border-top: 1px solid #eee;
+    padding-top: 8px;
+  }
+
+  /* ===== CALLOUT ===== */
+  .callout {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 14px 0;
+    font-size: 9pt;
+    line-height: 1.55;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .callout-info { background: #C97B3D08; border: 1px solid #C97B3D25; color: #7a4a1e; }
+  .callout-success { background: #10b98108; border: 1px solid #10b98125; color: #065f46; }
+  .callout-purple { background: #9333ea08; border: 1px solid #9333ea25; color: #4c1d95; }
+
+  /* ===== PRINT ===== */
+  @media print {
+    .page { page-break-after: always; margin: 0; }
+    body { background: #fff; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  }
+
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  /* Screenshot placeholder */
+  .screenshot-placeholder {
+    border: 2px dashed #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    color: #aaa;
+    font-size: 8.5pt;
+    background: #fafafa;
+  }
+
+  .ui-feature-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .ui-feat {
+    padding: 12px;
+    border-radius: 8px;
+    background: #f5f5f5;
+    border: 1px solid #eaeaea;
+  }
+
+  .ui-feat h5 {
+    font-size: 8.5pt;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 4px;
+  }
+
+  .ui-feat p { font-size: 7.5pt; color: #666; }
+
+  /* numbered list */
+  .num-list { padding-left: 0; list-style: none; }
+  .num-list li {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 9px;
+    font-size: 9pt;
+    color: #333;
+  }
+  .num-list li .num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #C97B3D, #D90429);
+    color: #fff;
+    font-size: 7.5pt;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PAGE 1: COVER -->
+<!-- ═══════════════════════════════════════ -->
+<div class="page cover">
+  <div class="cover-inner">
+    <div class="hackathon-badge">
+      ⚡ Simply Updify · InnovateX 2026
+    </div>
+
+    <h1>SYN<span>APSE</span></h1>
+
+    <p class="cover-tagline">
+      Debug your degree. Ace your placements.<br>
+      An AI-powered all-in-one ecosystem for college students.
+    </p>
+
+    <div class="cover-divider"></div>
+
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Category</span>
+        <span class="cover-meta-value">EdTech / AI</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Stage</span>
+        <span class="cover-meta-value">Preliminary Round</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Event</span>
+        <span class="cover-meta-value">InnovateX 2026</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Date</span>
+        <span class="cover-meta-value">June 23, 2026</span>
+      </div>
+    </div>
+
+    <div class="cover-features-preview">
+      <span class="feat-chip">🤖 ML Resume Analyzer</span>
+      <span class="feat-chip">📊 DSA Visualizer</span>
+      <span class="feat-chip">🎤 AI Mock Interviews</span>
+      <span class="feat-chip">📚 College Study AI</span>
+      <span class="feat-chip">🏆 Global Leaderboard</span>
+      <span class="feat-chip">🎮 Gamification System</span>
+      <span class="feat-chip">📱 PWA</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PAGE 2: PROBLEM STATEMENT -->
+<!-- ═══════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-icon">❗</div>
+      <div>
+        <div class="page-title">Problem Statement</div>
+        <div class="page-subtitle">What we set out to solve</div>
+      </div>
+    </div>
+    <div class="page-brand">SYNAPSE</div>
+  </div>
+
+  <div class="callout callout-info">
+    <span style="font-size:14px;">💡</span>
+    <span>Engineering students today are overwhelmed by <strong>fragmented tools</strong> — they juggle 5–8 different platforms just to prepare for exams and placements, wasting time and losing momentum.</span>
+  </div>
+
+  <div class="problem-grid">
+    <div class="problem-card">
+      <h4>📚 Scattered Academic Resources</h4>
+      <p>Students hop between YouTube, NPTEL, college PDFs, and Google Drive to access study material. There is no single organized system to break down a syllabus and identify high-priority topics.</p>
+    </div>
+    <div class="problem-card">
+      <h4>💻 No Structured DSA Practice</h4>
+      <p>Most platforms either paywall quality problems or lack visual learning. Students struggle to understand HOW algorithms work — not just the code. No platform combines visualizations, pattern recognition, and practice under one roof.</p>
+    </div>
+    <div class="problem-card">
+      <h4>📄 Resume Blindness</h4>
+      <p>Students submit resumes without knowing their ATS score or how well they match job descriptions. No free tool combines ML-based role prediction, skill gap identification, AND personalized study roadmaps.</p>
+    </div>
+    <div class="problem-card">
+      <h4>🎤 Zero Interview Practice</h4>
+      <p>Students only practice interviews the night before. Peer mock interview platforms are expensive, and AI interviewers rarely cover behavioral + DSA + system design in one session.</p>
+    </div>
+    <div class="problem-card">
+      <h4>🧩 No Engagement Mechanism</h4>
+      <p>Without motivation or progress tracking, students procrastinate. Standard platforms show stats but don't gamify the learning journey with XP, streaks, badges, and global leaderboards.</p>
+    </div>
+    <div class="problem-card">
+      <h4>🏫 College Study vs Placement Gap</h4>
+      <p>Students treat university exams and placement preparation as completely separate tracks, leading to burnout and poor time management. No platform bridges the academic-to-industry pipeline effectively.</p>
+    </div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-box">
+      <div class="stat-num">78%</div>
+      <div class="stat-label">Engineering students use 5+ different platforms for exam + placement prep</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">65%</div>
+      <div class="stat-label">Resumes never pass ATS filters due to formatting and skill mismatches</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">3.2×</div>
+      <div class="stat-label">More likely to get placed when students practice mock interviews regularly</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">40%</div>
+      <div class="stat-label">Of study time is wasted on low-priority topics due to lack of PYQ analysis</div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>SYNAPSE — InnovateX 2026</span>
+    <span>Problem Statement</span>
+    <span>Page 2</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PAGE 3: PROPOSED SOLUTION -->
+<!-- ═══════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-icon">💡</div>
+      <div>
+        <div class="page-title">Proposed Solution</div>
+        <div class="page-subtitle">One platform, complete student lifecycle</div>
+      </div>
+    </div>
+    <div class="page-brand">SYNAPSE</div>
+  </div>
+
+  <div class="solution-hero">
+    <h3>SYNAPSE — <span>The Complete Student Intelligence Platform</span></h3>
+    <p>A unified, AI-powered web ecosystem that covers a student's complete journey from university exams to top-tier tech company placements — all in one authenticated, gamified, and beautifully designed platform.</p>
+  </div>
+
+  <p style="font-size:9.5pt;color:#444;margin-bottom:16px;line-height:1.6;">
+    Instead of building yet another quiz app or LeetCode clone, SYNAPSE takes a <strong>full-stack, holistic approach</strong> — combining machine learning, generative AI, peer collaboration, and real-time analytics into a single coherent product with a premium experience students will actually want to use.
+  </p>
+
+  <div class="section-title"><span class="orange">◆</span> Three Core Pillars</div>
+  <div class="pillars-grid">
+    <div class="pillar">
+      <span class="pillar-icon">🏫</span>
+      <h4>Academic Excellence</h4>
+      <p>AI-powered syllabus analyzer, PYQ pattern detector, cheat sheet generator, and GPA tracker to ace university exams.</p>
+    </div>
+    <div class="pillar">
+      <span class="pillar-icon">💼</span>
+      <h4>Placement Readiness</h4>
+      <p>ML resume analyzer, DSA visualizer, company-wise test banks, AI + peer mock interviews, and video rooms.</p>
+    </div>
+    <div class="pillar">
+      <span class="pillar-icon">🎮</span>
+      <h4>Motivation Engine</h4>
+      <p>XP system, 7 unlock-able badges, daily login streaks, global XP leaderboard, and achievement notifications.</p>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:20px;"><span class="orange">◆</span> How It Works — User Flow</div>
+  <ul class="num-list">
+    <li><div class="num">1</div><span><strong>Register / Demo Mode</strong> — Students sign up or try a full demo without any friction. JWT auth protects all routes.</span></li>
+    <li><div class="num">2</div><span><strong>Upload Resume</strong> — ML model classifies role, scores ATS compatibility, detects missing skills, and suggests personalized learning roadmaps.</span></li>
+    <li><div class="num">3</div><span><strong>Study for Exams</strong> — Upload syllabus PDF → Gemini AI generates topic tree, study roadmap, PYQ analysis, and an exam cheat sheet.</span></li>
+    <li><div class="num">4</div><span><strong>Practice DSA</strong> — Study patterns, watch animated visualizations, solve problems in-browser, and track progress with XP rewards.</span></li>
+    <li><div class="num">5</div><span><strong>Mock Interview</strong> — Match with peers for live video interviews, or practice with the AI Interviewer across 5 topics and 3 difficulty levels.</span></li>
+    <li><div class="num">6</div><span><strong>Climb the Leaderboard</strong> — Every action earns XP. Track streaks, earn badges, and compete on the global ranking board.</span></li>
+  </ul>
+
+  <div class="callout callout-success" style="margin-top:16px;">
+    <span style="font-size:14px;">✅</span>
+    <span>SYNAPSE requires <strong>zero external subscriptions</strong>. It is a fully self-contained platform — a student can register, analyze their resume, study for exams, practice DSA, and prepare for interviews all in a single session without leaving the app.</span>
+  </div>
+
+  <div class="page-footer">
+    <span>SYNAPSE — InnovateX 2026</span>
+    <span>Proposed Solution</span>
+    <span>Page 3</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PAGE 4: KEY FEATURES -->
+<!-- ═══════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-icon">⭐</div>
+      <div>
+        <div class="page-title">Key Features</div>
+        <div class="page-subtitle">19 feature areas across 23 pages</div>
+      </div>
+    </div>
+    <div class="page-brand">SYNAPSE</div>
+  </div>
+
+  <div class="features-grid">
+
+    <div class="feature-card">
+      <div class="feature-icon-wrap bg-orange">🤖</div>
+      <div>
+        <h4>ML Resume Analyzer</h4>
+        <p>Upload PDF → Python + scikit-learn model predicts job role, calculates ATS score, identifies missing skills, and generates custom learning roadmaps for 14+ skills.</p>
+        <span class="feature-badge badge-orange">Machine Learning</span>
+        <span class="feature-badge badge-orange">Python</span>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon-wrap bg-purple">🏫</div>
+      <div>
+        <h4>College Study AI Engine</h4>
+        <p>3-mode intelligence: syllabus breakdown, PYQ frequency analysis, and cross-reference. Powered by Google Gemini API with exam cheat sheet export.</p>
+        <span class="feature-badge badge-purple">Gemini AI</span>
+        <span class="feature-badge badge-purple">PDF Analysis</span>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon-wrap bg-orange">🎬</div>
+      <div>
+        <h4>AlgoMaster DSA Visualizer</h4>
+        <p>10 algorithms animated step-by-step with spring-physics transitions, live code highlighting, comparison counters, speed control, and custom array input.</p>
+        <span class="feature-badge badge-orange">Interactive</span>
+        <span class="feature-badge badge-orange">Visual Learning</span>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon-wrap bg-green">🎤</div>
+      <div>
+        <h4>AI Mock Interview System</h4>
+        <p>AI Interviewer with 5 topics × 3 difficulty levels, curated Q&A bank, instant feedback, and peer-to-peer matching with video room.</p>
+        <span class="feature-badge badge-green">AI-Powered</span>
+        <span class="feature-badge badge-green">P2P</span>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon-wrap bg-orange">📊</div>
+      <div>
+        <h4>Analytics Dashboard</h4>
+        <p>4 Chart.js charts (bar, radar, line, doughnut), GitHub-style 365-day activity heatmap, skill radar, score progression tracking, and badge showcase.</p>
+        <span class="feature-badge badge-orange">Chart.js</span>
+        <span class="feature-badge badge-orange">Data Viz</span>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon-wrap bg-blue">🏆</div>
+      <div>
+        <h4>Global XP Leaderboard</h4>
+        <p>Real-time MongoDB-backed rankings with XP, level, streak, and problem stats per user. Current user highlighted. Top 3 receive medal badges.</p>
+        <span class="feature-badge badge-blue">MongoDB</span>
+        <span class="feature-badge badge-blue">Real-time</span>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon-wrap bg-yellow" style="background:#f59e0b18;">🎮</div>
+      <div>
+        <h4>Gamification Engine</h4>
+        <p>XP for 6 action types, level system, 7 unlock-able badges, daily streak tracking, bell notifications, and backend sync to MongoDB. All running globally via navbar-auth.js.</p>
+        <span class="feature-badge" style="background:#f59e0b20;color:#92400e;">XP System</span>
+        <span class="feature-badge" style="background:#f59e0b20;color:#92400e;">Badges</span>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon-wrap bg-red">🛡️</div>
+      <div>
+        <h4>Admin Control Panel</h4>
+        <p>JWT-protected admin dashboard for managing DSA questions (CRUD), viewing users, resolving feedback, and monitoring system health — server, MongoDB, Python, memory.</p>
+        <span class="feature-badge" style="background:#D9042920;color:#D90429;">Admin Only</span>
+        <span class="feature-badge" style="background:#D9042920;color:#D90429;">CRUD</span>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon-wrap bg-purple">📚</div>
+      <div>
+        <h4>DSA Patterns Module</h4>
+        <p>16+ algorithm patterns (Sliding Window, Two Pointers, BFS/DFS, DP, etc.) with description, when-to-use guide, template code, and example problems.</p>
+        <span class="feature-badge badge-purple">Pattern Learning</span>
+      </div>
+    </div>
+
+    <div class="feature-card">
+      <div class="feature-icon-wrap bg-blue">📱</div>
+      <div>
+        <h4>Progressive Web App (PWA)</h4>
+        <p>Installable on desktop & mobile via manifest.json. Service worker caches key assets for offline capability. Custom theme color and app icons.</p>
+        <span class="feature-badge badge-blue">Offline Ready</span>
+        <span class="feature-badge badge-blue">Installable</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="page-footer">
+    <span>SYNAPSE — InnovateX 2026</span>
+    <span>Key Features</span>
+    <span>Page 4</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PAGE 5: TECHNOLOGY STACK -->
+<!-- ═══════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-icon">⚙️</div>
+      <div>
+        <div class="page-title">Technology Stack</div>
+        <div class="page-subtitle">Full-stack, AI-integrated, production-grade</div>
+      </div>
+    </div>
+    <div class="page-brand">SYNAPSE</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+    <div>
+      <div class="tech-section">
+        <h4>🖥️ Frontend</h4>
+        <div class="tech-chips">
+          <span class="tech-chip primary">HTML5</span>
+          <span class="tech-chip primary">CSS3</span>
+          <span class="tech-chip primary">Vanilla JavaScript</span>
+          <span class="tech-chip primary">Tailwind CSS v4</span>
+          <span class="tech-chip primary">Chart.js</span>
+          <span class="tech-chip primary">Font Awesome 6</span>
+          <span class="tech-chip primary">Google Fonts</span>
+        </div>
+      </div>
+
+      <div class="tech-section">
+        <h4>⚙️ Backend Runtime</h4>
+        <div class="tech-chips">
+          <span class="tech-chip">Node.js</span>
+          <span class="tech-chip">Express.js</span>
+          <span class="tech-chip">JWT (jsonwebtoken)</span>
+          <span class="tech-chip">multer</span>
+          <span class="tech-chip">bcryptjs</span>
+          <span class="tech-chip">dotenv</span>
+          <span class="tech-chip">CORS</span>
+        </div>
+      </div>
+
+      <div class="tech-section">
+        <h4>🗄️ Database</h4>
+        <div class="tech-chips">
+          <span class="tech-chip db">MongoDB Atlas</span>
+          <span class="tech-chip db">Mongoose ODM</span>
+          <span class="tech-chip db">questions_bank.json</span>
+        </div>
+      </div>
+
+      <div class="tech-section">
+        <h4>🔐 Authentication</h4>
+        <div class="tech-chips">
+          <span class="tech-chip">JWT Bearer Tokens</span>
+          <span class="tech-chip">localStorage session</span>
+          <span class="tech-chip">Auth Guard (client)</span>
+          <span class="tech-chip">verifyAdmin middleware</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="tech-section">
+        <h4>🤖 AI / Machine Learning</h4>
+        <div class="tech-chips">
+          <span class="tech-chip ai">Google Gemini API</span>
+          <span class="tech-chip ai">HuggingFace Mistral-7B</span>
+          <span class="tech-chip ai">scikit-learn (Random Forest)</span>
+          <span class="tech-chip ai">TF-IDF Vectorizer</span>
+        </div>
+      </div>
+
+      <div class="tech-section">
+        <h4>🐍 Python ML Pipeline</h4>
+        <div class="tech-chips">
+          <span class="tech-chip python">Python 3.14</span>
+          <span class="tech-chip python">pdfplumber</span>
+          <span class="tech-chip python">joblib</span>
+          <span class="tech-chip python">scikit-learn</span>
+          <span class="tech-chip python">pandas</span>
+          <span class="tech-chip python">Flask (chatbot)</span>
+        </div>
+      </div>
+
+      <div class="tech-section">
+        <h4>🎨 Design System</h4>
+        <div class="tech-chips">
+          <span class="tech-chip">Glassmorphism CSS</span>
+          <span class="tech-chip">Canvas (Neural Network BG)</span>
+          <span class="tech-chip">Spring Physics Animations</span>
+          <span class="tech-chip">PWA (manifest + SW)</span>
+        </div>
+      </div>
+
+      <div class="tech-section">
+        <h4>🔧 Dev Tools</h4>
+        <div class="tech-chips">
+          <span class="tech-chip">Git</span>
+          <span class="tech-chip">npm</span>
+          <span class="tech-chip">VS Code</span>
+          <span class="tech-chip">Postman</span>
+          <span class="tech-chip">.env config</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-purple" style="margin-top:20px;">
+    <span style="font-size:14px;">🧠</span>
+    <div>
+      <strong>ML Model Details:</strong> Trained Random Forest classifier on a labeled resume dataset (~2000 records). Features extracted using TF-IDF vectorizer. Predicts from 6 job roles: Java Developer, Data Science, DevOps Engineer, Web Designing, Testing, Business Analyst. Model accuracy: <strong>~87%</strong>. Inference time: &lt;2 seconds.
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:20px;"><span class="orange">◆</span> API Endpoints Summary</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;">
+    <div style="padding:10px;border-radius:8px;background:#f5f5f5;font-size:8pt;font-family:'Fira Code',monospace;">
+      <strong style="color:#C97B3D;">POST</strong> /upload<br>
+      <span style="color:#888;">ML resume analysis</span>
+    </div>
+    <div style="padding:10px;border-radius:8px;background:#f5f5f5;font-size:8pt;font-family:'Fira Code',monospace;">
+      <strong style="color:#10b981;">POST</strong> /api/auth/login<br>
+      <span style="color:#888;">JWT auth + session</span>
+    </div>
+    <div style="padding:10px;border-radius:8px;background:#f5f5f5;font-size:8pt;font-family:'Fira Code',monospace;">
+      <strong style="color:#C97B3D;">POST</strong> /api/college/analyze<br>
+      <span style="color:#888;">Gemini AI study plan</span>
+    </div>
+    <div style="padding:10px;border-radius:8px;background:#f5f5f5;font-size:8pt;font-family:'Fira Code',monospace;">
+      <strong style="color:#3b82f6;">GET</strong> /api/ranking<br>
+      <span style="color:#888;">Global leaderboard</span>
+    </div>
+    <div style="padding:10px;border-radius:8px;background:#f5f5f5;font-size:8pt;font-family:'Fira Code',monospace;">
+      <strong style="color:#10b981;">POST</strong> /api/users/sync-stats<br>
+      <span style="color:#888;">XP + streak sync</span>
+    </div>
+    <div style="padding:10px;border-radius:8px;background:#f5f5f5;font-size:8pt;font-family:'Fira Code',monospace;">
+      <strong style="color:#C97B3D;">POST</strong> /api/run-code<br>
+      <span style="color:#888;">Code execution</span>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>SYNAPSE — InnovateX 2026</span>
+    <span>Technology Stack</span>
+    <span>Page 5</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PAGE 6: SYSTEM ARCHITECTURE -->
+<!-- ═══════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-icon">🏗️</div>
+      <div>
+        <div class="page-title">System Architecture &amp; Workflow</div>
+        <div class="page-subtitle">End-to-end data flow and component interaction</div>
+      </div>
+    </div>
+    <div class="page-brand">SYNAPSE</div>
+  </div>
+
+  <div class="section-title"><span class="orange">◆</span> Layered Architecture</div>
+
+  <div class="arch-flow">
+    <div class="arch-layer">
+      <div class="arch-label">USER LAYER</div>
+      <div class="arch-boxes">
+        <div class="arch-box front">Browser (HTML/CSS/JS)</div>
+        <div class="arch-box front">PWA (manifest + SW)</div>
+        <div class="arch-box front">Mobile / Desktop</div>
+      </div>
+    </div>
+    <div class="arch-arrow">↕ HTTP/HTTPS Requests</div>
+    <div class="arch-layer">
+      <div class="arch-label">FRONTEND</div>
+      <div class="arch-boxes">
+        <div class="arch-box front">auth-guard.js (session checks)</div>
+        <div class="arch-box front">navbar-auth.js (XP/badges/streaks)</div>
+        <div class="arch-box front">synapse-canvas.js (neural BG)</div>
+      </div>
+    </div>
+    <div class="arch-arrow">↕ REST API (JSON)</div>
+    <div class="arch-layer">
+      <div class="arch-label">BACKEND API</div>
+      <div class="arch-boxes">
+        <div class="arch-box back">Express.js Server (Port 5000)</div>
+        <div class="arch-box back">JWT Middleware (verifyToken)</div>
+        <div class="arch-box back">Admin Guard (verifyAdmin)</div>
+      </div>
+    </div>
+    <div class="arch-arrow">↕ Service Calls</div>
+    <div class="arch-layer">
+      <div class="arch-label">SERVICES</div>
+      <div class="arch-boxes">
+        <div class="arch-box ai">Gemini AI (College Study)</div>
+        <div class="arch-box ml">Python ML (Resume Analyzer)</div>
+        <div class="arch-box ai">Mistral-7B (Study Plans)</div>
+      </div>
+    </div>
+    <div class="arch-arrow">↕ Mongoose ODM</div>
+    <div class="arch-layer">
+      <div class="arch-label">DATA LAYER</div>
+      <div class="arch-boxes">
+        <div class="arch-box db">MongoDB Atlas (users, resumes, rankings)</div>
+        <div class="arch-box db">localStorage (session, XP, stats)</div>
+        <div class="arch-box db">questions_bank.json (DSA questions)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:22px;"><span class="orange">◆</span> ML Resume Analysis Pipeline</div>
+  <div style="display:flex;gap:0;margin-top:10px;align-items:center;flex-wrap:wrap;">
+    <div style="padding:10px 12px;background:#fdf4f4;border:1px solid #f0c0c0;border-radius:8px;font-size:8pt;text-align:center;min-width:95px;">
+      <strong>1. PDF Upload</strong><br><span style="color:#888;">Multer → /upload</span>
+    </div>
+    <div style="padding:0 6px;color:#bbb;font-size:14px;">→</div>
+    <div style="padding:10px 12px;background:#fff8f0;border:1px solid #f0d8b0;border-radius:8px;font-size:8pt;text-align:center;min-width:95px;">
+      <strong>2. Text Extract</strong><br><span style="color:#888;">pdfplumber</span>
+    </div>
+    <div style="padding:0 6px;color:#bbb;font-size:14px;">→</div>
+    <div style="padding:10px 12px;background:#f0fff8;border:1px solid #b0f0d8;border-radius:8px;font-size:8pt;text-align:center;min-width:95px;">
+      <strong>3. Vectorize</strong><br><span style="color:#888;">TF-IDF</span>
+    </div>
+    <div style="padding:0 6px;color:#bbb;font-size:14px;">→</div>
+    <div style="padding:10px 12px;background:#f5f0ff;border:1px solid #d0b0f0;border-radius:8px;font-size:8pt;text-align:center;min-width:95px;">
+      <strong>4. Predict Role</strong><br><span style="color:#888;">Random Forest</span>
+    </div>
+    <div style="padding:0 6px;color:#bbb;font-size:14px;">→</div>
+    <div style="padding:10px 12px;background:#f0f8ff;border:1px solid #b0d8f0;border-radius:8px;font-size:8pt;text-align:center;min-width:95px;">
+      <strong>5. Score + Gaps</strong><br><span style="color:#888;">Skill matching</span>
+    </div>
+    <div style="padding:0 6px;color:#bbb;font-size:14px;">→</div>
+    <div style="padding:10px 12px;background:#f0fdf4;border:1px solid #a0dbb0;border-radius:8px;font-size:8pt;text-align:center;min-width:95px;">
+      <strong>6. JSON → UI</strong><br><span style="color:#888;">Render results</span>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:22px;"><span class="orange">◆</span> Gamification Data Flow</div>
+  <ul class="num-list">
+    <li><div class="num">1</div><span>User performs action (solve DSA problem, analyze resume, complete interview, etc.)</span></li>
+    <li><div class="num">2</div><span><code style="font-family:'Fira Code';font-size:8pt;background:#f5f5f5;padding:1px 5px;border-radius:3px;">awardXP(eventType)</code> called globally → XP added to <code style="font-family:'Fira Code';font-size:8pt;background:#f5f5f5;padding:1px 5px;border-radius:3px;">localStorage.synapse_stats</code></span></li>
+    <li><div class="num">3</div><span>Badge conditions checked → unlocked badges saved and notification created</span></li>
+    <li><div class="num">4</div><span>XP + streak synced to MongoDB via <code style="font-family:'Fira Code';font-size:8pt;background:#f5f5f5;padding:1px 5px;border-radius:3px;">POST /api/users/sync-stats</code> (debounced)</span></li>
+    <li><div class="num">5</div><span>Global ranking recalculated → user's leaderboard position updated in real-time</span></li>
+  </ul>
+
+  <div class="page-footer">
+    <span>SYNAPSE — InnovateX 2026</span>
+    <span>System Architecture</span>
+    <span>Page 6</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PAGE 7: IMPLEMENTATION PROGRESS -->
+<!-- ═══════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-icon">✅</div>
+      <div>
+        <div class="page-title">Implementation Progress</div>
+        <div class="page-subtitle">Current build status across all modules</div>
+      </div>
+    </div>
+    <div class="page-brand">SYNAPSE</div>
+  </div>
+
+  <table class="progress-table">
+    <thead>
+      <tr>
+        <th>Module / Feature</th>
+        <th>Status</th>
+        <th>Completion</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Authentication System</strong> (JWT, Register, Login, Demo, Social)</td>
+        <td><span class="status-badge status-done">✅ Complete</span></td>
+        <td>100% <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:100%"></div></div></td>
+        <td>Full auth guard on all pages</td>
+      </tr>
+      <tr>
+        <td><strong>ML Resume Analyzer</strong> (Python, pdfplumber, Random Forest)</td>
+        <td><span class="status-badge status-done">✅ Complete</span></td>
+        <td>100% <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:100%"></div></div></td>
+        <td>Model trained, history in MongoDB</td>
+      </tr>
+      <tr>
+        <td><strong>College Study AI Engine</strong> (3 modes, Gemini, export)</td>
+        <td><span class="status-badge status-done">✅ Complete</span></td>
+        <td>100% <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:100%"></div></div></td>
+        <td>Simulated fallback when no API key</td>
+      </tr>
+      <tr>
+        <td><strong>AlgoMaster DSA Visualizer</strong> (10 algos, speed control, code panel)</td>
+        <td><span class="status-badge status-done">✅ Complete</span></td>
+        <td>100% <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:100%"></div></div></td>
+        <td>Spring physics animations working</td>
+      </tr>
+      <tr>
+        <td><strong>DSA Question Bank</strong> (topic-wise, 100+ Qs, admin CRUD)</td>
+        <td><span class="status-badge status-done">✅ Complete</span></td>
+        <td>100% <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:100%"></div></div></td>
+        <td>Admin can add/delete questions live</td>
+      </tr>
+      <tr>
+        <td><strong>DSA Patterns Module</strong> (16+ patterns, code templates)</td>
+        <td><span class="status-badge status-done">✅ Complete</span></td>
+        <td>100% <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:100%"></div></div></td>
+        <td>All patterns with examples</td>
+      </tr>
+      <tr>
+        <td><strong>AI Mock Interview</strong> (5 topics, 3 difficulties, Q&A bank, feedback)</td>
+        <td><span class="status-badge status-done">✅ Complete</span></td>
+        <td>100% <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:100%"></div></div></td>
+        <td>P2P matchmaking → video room flow</td>
+      </tr>
+      <tr>
+        <td><strong>Analytics Dashboard</strong> (4 charts, heatmap, badge grid)</td>
+        <td><span class="status-badge status-done">✅ Complete</span></td>
+        <td>100% <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:100%"></div></div></td>
+        <td>Merged with profile page</td>
+      </tr>
+      <tr>
+        <td><strong>Gamification Engine</strong> (XP, streaks, 7 badges, notifications)</td>
+        <td><span class="status-badge status-done">✅ Complete</span></td>
+        <td>100% <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:100%"></div></div></td>
+        <td>Synced to MongoDB, global</td>
+      </tr>
+      <tr>
+        <td><strong>Global Leaderboard</strong> (MongoDB rankings, medal badges)</td>
+        <td><span class="status-badge status-done">✅ Complete</span></td>
+        <td>100% <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:100%"></div></div></td>
+        <td>Real-time fetch on page load</td>
+      </tr>
+      <tr>
+        <td><strong>Admin Panel</strong> (CRUD, feedback, health monitor)</td>
+        <td><span class="status-badge status-done">✅ Complete</span></td>
+        <td>100% <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:100%"></div></div></td>
+        <td>verifyAdmin JWT middleware</td>
+      </tr>
+      <tr>
+        <td><strong>Company-Wise Test Banks</strong> (Google, Amazon, Microsoft, etc.)</td>
+        <td><span class="status-badge status-done">✅ Complete</span></td>
+        <td>90% <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:90%"></div></div></td>
+        <td>More company banks expanding</td>
+      </tr>
+      <tr>
+        <td><strong>AI Study Plan Generator</strong> (Mistral-7B, timetable)</td>
+        <td><span class="status-badge status-done">✅ Complete</span></td>
+        <td>90% <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:90%"></div></div></td>
+        <td>API key dependent for full power</td>
+      </tr>
+      <tr>
+        <td><strong>Video Room</strong> (P2P mock interview UI)</td>
+        <td><span class="status-badge status-wip">🔄 In Progress</span></td>
+        <td>70% <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:70%"></div></div></td>
+        <td>WebRTC integration planned</td>
+      </tr>
+      <tr>
+        <td><strong>SARA AI Chatbot</strong> (Flask port 5002)</td>
+        <td><span class="status-badge status-wip">🔄 In Progress</span></td>
+        <td>65% <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:65%"></div></div></td>
+        <td>Flask backend functional</td>
+      </tr>
+      <tr>
+        <td><strong>PWA</strong> (manifest, service worker, offline)</td>
+        <td><span class="status-badge status-done">✅ Complete</span></td>
+        <td>100% <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:100%"></div></div></td>
+        <td>Installable on all devices</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="stat-row" style="margin-top:16px;">
+    <div class="stat-box">
+      <div class="stat-num">23</div>
+      <div class="stat-label">HTML Pages Built</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">17</div>
+      <div class="stat-label">Backend API Endpoints</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">6</div>
+      <div class="stat-label">JavaScript Modules</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">~15K</div>
+      <div class="stat-label">Lines of Code</div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>SYNAPSE — InnovateX 2026</span>
+    <span>Implementation Progress</span>
+    <span>Page 7</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PAGE 8: UI DESIGN HIGHLIGHTS -->
+<!-- ═══════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-icon">🎨</div>
+      <div>
+        <div class="page-title">UI / UX Design Highlights</div>
+        <div class="page-subtitle">Premium dark glassmorphic design system</div>
+      </div>
+    </div>
+    <div class="page-brand">SYNAPSE</div>
+  </div>
+
+  <div class="callout callout-info">
+    <span>🎨</span>
+    <span>SYNAPSE features a <strong>premium dark glassmorphic design system</strong> — every page has a consistent visual language with animated neural-network canvas backgrounds, ambient glow elements, micro-animations, spring-physics transitions, and a curated dark color palette.</span>
+  </div>
+
+  <!-- Color Palette -->
+  <div class="section-title" style="margin-top:16px;"><span class="orange">◆</span> Brand Color System</div>
+  <div style="display:flex;gap:10px;margin:12px 0 20px;">
+    <div style="flex:1;text-align:center;">
+      <div style="height:48px;border-radius:8px;background:#0A0A0A;border:1px solid #333;margin-bottom:6px;"></div>
+      <div style="font-size:7.5pt;color:#555;font-family:'Fira Code',monospace;">#0A0A0A</div>
+      <div style="font-size:7.5pt;color:#888;">Background</div>
+    </div>
+    <div style="flex:1;text-align:center;">
+      <div style="height:48px;border-radius:8px;background:#111111;border:1px solid #333;margin-bottom:6px;"></div>
+      <div style="font-size:7.5pt;color:#555;font-family:'Fira Code',monospace;">#111111</div>
+      <div style="font-size:7.5pt;color:#888;">Card</div>
+    </div>
+    <div style="flex:1;text-align:center;">
+      <div style="height:48px;border-radius:8px;background:#C97B3D;margin-bottom:6px;"></div>
+      <div style="font-size:7.5pt;color:#555;font-family:'Fira Code',monospace;">#C97B3D</div>
+      <div style="font-size:7.5pt;color:#888;">Primary Orange</div>
+    </div>
+    <div style="flex:1;text-align:center;">
+      <div style="height:48px;border-radius:8px;background:#D90429;margin-bottom:6px;"></div>
+      <div style="font-size:7.5pt;color:#555;font-family:'Fira Code',monospace;">#D90429</div>
+      <div style="font-size:7.5pt;color:#888;">Accent Red</div>
+    </div>
+    <div style="flex:1;text-align:center;">
+      <div style="height:48px;border-radius:8px;background:linear-gradient(135deg,#C97B3D,#D90429,#9333ea);margin-bottom:6px;"></div>
+      <div style="font-size:7.5pt;color:#555;font-family:'Fira Code',monospace;">Gradient</div>
+      <div style="font-size:7.5pt;color:#888;">Hero / Headings</div>
+    </div>
+    <div style="flex:1;text-align:center;">
+      <div style="height:48px;border-radius:8px;background:#F5F5F5;border:1px solid #ddd;margin-bottom:6px;"></div>
+      <div style="font-size:7.5pt;color:#555;font-family:'Fira Code',monospace;">#F5F5F5</div>
+      <div style="font-size:7.5pt;color:#888;">Text Primary</div>
+    </div>
+  </div>
+
+  <div class="section-title"><span class="orange">◆</span> Design System Components</div>
+  <div class="ui-feature-list">
+    <div class="ui-feat">
+      <h5>🌐 Neural Canvas</h5>
+      <p>Animated particle network background on every page — interactive, responsive, and lightweight using HTML5 Canvas API.</p>
+    </div>
+    <div class="ui-feat">
+      <h5>💎 Glassmorphism Cards</h5>
+      <p>backdrop-filter: blur(20px) + saturate(180%) with rgba backgrounds. Hover states glow with orange border shadows.</p>
+    </div>
+    <div class="ui-feat">
+      <h5>🌟 Ambient Glows</h5>
+      <p>Blurred radial gradient blobs (filter: blur(130px)) create atmospheric depth behind content without affecting performance.</p>
+    </div>
+    <div class="ui-feat">
+      <h5>⚡ Spring Animations</h5>
+      <p>cubic-bezier(0.34, 1.56, 0.64, 1) spring physics on all DSA visualizer bar transitions. Hover lift + scale effects on cards.</p>
+    </div>
+    <div class="ui-feat">
+      <h5>🔔 Toast Notifications</h5>
+      <p>Slide-up toast system with color-coded borders for success (orange) and error (red). Auto-dismiss after 3.5 seconds.</p>
+    </div>
+    <div class="ui-feat">
+      <h5>📱 Fully Responsive</h5>
+      <p>Desktop-first responsive design. Mobile hamburger menu, collapsible nav, grid layouts adapt to all screen sizes.</p>
+    </div>
+    <div class="ui-feat">
+      <h5>🅰️ Typography Scale</h5>
+      <p>Plus Jakarta Sans (headings, 700-900 weight) + Inter (body, 300-600 weight) + Fira Code (monospace/code blocks).</p>
+    </div>
+    <div class="ui-feat">
+      <h5>🎯 Grid Overlay</h5>
+      <p>Subtle 50px grid pattern fixed behind all content. Creates a technical, engineering aesthetic across the platform.</p>
+    </div>
+    <div class="ui-feat">
+      <h5>🌈 Code Highlighting</h5>
+      <p>Active line highlighting in DSA visualizer — orange border-left + background fade when algorithm reaches that code line.</p>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:20px;"><span class="orange">◆</span> Pages Designed (23 total)</div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">🏠 Landing</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">🔐 Auth</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">⭐ Features</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">📊 Analytics</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">💻 DSA Hub</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">📖 Topic</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">⌨️ Solve</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">🧩 Patterns</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">🎬 Visualizer Menu</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">📈 Visualizer</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">🏫 College Study</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">🧠 Study Intelligence</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">🤖 SARA Study</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">📄 Resume Analyzer</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">🎤 Interview Hub</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">🤝 Mock Interview</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">🎥 Video Room</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">🏆 Global Ranking</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">🏢 Company Tests</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">📅 Study Plan</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">🛡️ Admin Panel</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">💬 Chatbot</span>
+    <span style="padding:4px 10px;border-radius:6px;background:#f5f5f5;border:1px solid #eee;font-size:7.5pt;color:#444;">404 Page</span>
+  </div>
+
+  <div class="page-footer">
+    <span>SYNAPSE — InnovateX 2026</span>
+    <span>UI / UX Design</span>
+    <span>Page 8</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PAGE 9: FUTURE SCOPE -->
+<!-- ═══════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-icon">🚀</div>
+      <div>
+        <div class="page-title">Future Scope</div>
+        <div class="page-subtitle">Roadmap beyond the hackathon</div>
+      </div>
+    </div>
+    <div class="page-brand">SYNAPSE</div>
+  </div>
+
+  <div class="callout callout-success">
+    <span>🚀</span>
+    <span>SYNAPSE is designed to scale into a <strong>full SaaS EdTech platform</strong>. The modular architecture and clean API design make each feature independently deployable and extendable.</span>
+  </div>
+
+  <div class="future-grid" style="margin-top:20px;">
+    <div class="future-item">
+      <span class="future-icon">🎙️</span>
+      <h4>Voice AI Interviewer</h4>
+      <p>Real-time speech-to-text + TTS for actual spoken mock interviews. Evaluate pronunciation, confidence, and technical accuracy.</p>
+    </div>
+    <div class="future-item">
+      <span class="future-icon">🤝</span>
+      <h4>Real WebRTC P2P</h4>
+      <p>Full WebRTC integration for actual peer-to-peer video interviews with screen sharing, collaborative coding, and recording.</p>
+    </div>
+    <div class="future-item">
+      <span class="future-icon">📱</span>
+      <h4>Native Mobile App</h4>
+      <p>React Native app for iOS & Android with push notifications, offline study content, and biometric login.</p>
+    </div>
+    <div class="future-item">
+      <span class="future-icon">🧪</span>
+      <h4>Adaptive Testing Engine</h4>
+      <p>IRT-based adaptive difficulty — questions get harder or easier based on your real-time performance, maximizing learning efficiency.</p>
+    </div>
+    <div class="future-item">
+      <span class="future-icon">🤖</span>
+      <h4>Fine-tuned LLM</h4>
+      <p>Custom fine-tuned language model on Indian engineering curriculum for hyper-accurate syllabus analysis and PYQ prediction.</p>
+    </div>
+    <div class="future-item">
+      <span class="future-icon">🏫</span>
+      <h4>University Integrations</h4>
+      <p>Official partnerships with universities to pull live syllabus data, faculty notes, and past exam papers via institutional APIs.</p>
+    </div>
+    <div class="future-item">
+      <span class="future-icon">📊</span>
+      <h4>Mentor Dashboard</h4>
+      <p>Teachers and mentors can track student progress, assign tasks, review mock interview recordings, and provide structured feedback.</p>
+    </div>
+    <div class="future-item">
+      <span class="future-icon">💰</span>
+      <h4>Freemium Model</h4>
+      <p>Core features free forever. Pro tier ($4.99/mo) unlocks unlimited AI analysis, video interviews, advanced analytics, and more.</p>
+    </div>
+    <div class="future-item">
+      <span class="future-icon">🌐</span>
+      <h4>Multi-language Support</h4>
+      <p>Hindi, Tamil, Telugu, Bengali UI support — making SYNAPSE accessible to non-English-dominant student communities across India.</p>
+    </div>
+    <div class="future-item">
+      <span class="future-icon">🔗</span>
+      <h4>LinkedIn & GitHub Sync</h4>
+      <p>Auto-import GitHub projects and LinkedIn profile to pre-fill resume analyzer, get personalized role recommendations.</p>
+    </div>
+    <div class="future-item">
+      <span class="future-icon">🏭</span>
+      <h4>Company Tie-ups</h4>
+      <p>Partner with recruitment teams at top companies to publish actual test formats, evaluation rubrics, and direct referral pipelines.</p>
+    </div>
+    <div class="future-item">
+      <span class="future-icon">☁️</span>
+      <h4>Cloud Deployment</h4>
+      <p>Full deployment on AWS/GCP with CDN, autoscaling, CI/CD pipeline, and 99.9% uptime SLA for production-grade reliability.</p>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>SYNAPSE — InnovateX 2026</span>
+    <span>Future Scope</span>
+    <span>Page 9</span>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PAGE 10: TEAM DETAILS -->
+<!-- ═══════════════════════════════════════ -->
+<div class="page content-page" style="padding-bottom:60px;">
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-icon">👥</div>
+      <div>
+        <div class="page-title">Team Details</div>
+        <div class="page-subtitle">Simply Updify · InnovateX 2026</div>
+      </div>
+    </div>
+    <div class="page-brand">SYNAPSE</div>
+  </div>
+
+  <div style="text-align:center;margin:16px 0 24px;">
+    <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:24pt;font-weight:900;color:#111;letter-spacing:-1px;">
+      Team <span style="background:linear-gradient(90deg,#C97B3D,#D90429);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">SYNAPSE</span>
+    </div>
+    <div style="font-size:9pt;color:#888;margin-top:4px;">Building the future of student success · InnovateX 2026</div>
+  </div>
+
+  <div class="team-grid">
+    <div class="team-card">
+      <div class="team-avatar">S</div>
+      <div>
+        <h4>Sahil</h4>
+        <div class="team-role">Full-Stack Lead Developer</div>
+        <p>Architected the entire SYNAPSE platform — frontend design system, backend API, ML pipeline integration, gamification engine, and authentication system.</p>
+        <div style="margin-top:8px;">
+          <span class="team-tag">Node.js</span>
+          <span class="team-tag">Python ML</span>
+          <span class="team-tag">MongoDB</span>
+          <span class="team-tag">UI/UX Design</span>
+          <span class="team-tag">Gemini API</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="team-card">
+      <div class="team-avatar" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);">T</div>
+      <div>
+        <h4>Team Member 2</h4>
+        <div class="team-role" style="color:#3b82f6;">ML / Data Engineer</div>
+        <p>Trained and optimized the Random Forest resume classification model. Built the Python ML pipeline with pdfplumber and scikit-learn. Prepared training dataset and model evaluation.</p>
+        <div style="margin-top:8px;">
+          <span class="team-tag">Python</span>
+          <span class="team-tag">scikit-learn</span>
+          <span class="team-tag">Data Processing</span>
+          <span class="team-tag">pdfplumber</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="team-card">
+      <div class="team-avatar" style="background:linear-gradient(135deg,#10b981,#047857);">T</div>
+      <div>
+        <h4>Team Member 3</h4>
+        <div class="team-role" style="color:#10b981;">Frontend Developer &amp; DSA</div>
+        <p>Built the DSA visualizer algorithms, question bank management, pattern module content, and company-wise test preparation content and UI components.</p>
+        <div style="margin-top:8px;">
+          <span class="team-tag">JavaScript</span>
+          <span class="team-tag">DSA Content</span>
+          <span class="team-tag">Algorithm Design</span>
+          <span class="team-tag">HTML/CSS</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="team-card">
+      <div class="team-avatar" style="background:linear-gradient(135deg,#9333ea,#6b21a8);">T</div>
+      <div>
+        <h4>Team Member 4</h4>
+        <div class="team-role" style="color:#9333ea;">Research &amp; Content Strategy</div>
+        <p>Curated DSA problem sets, interview question banks, AI prompt engineering for college study module, and designed the user journey flows and documentation.</p>
+        <div style="margin-top:8px;">
+          <span class="team-tag">Prompt Engineering</span>
+          <span class="team-tag">Content Curation</span>
+          <span class="team-tag">UX Research</span>
+          <span class="team-tag">Documentation</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project at a Glance -->
+  <div style="margin-top:24px;padding:20px 24px;border-radius:12px;background:linear-gradient(135deg,#080808,#1a0a00);color:#fff;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:-30px;right:-30px;width:150px;height:150px;background:radial-gradient(circle,rgba(201,123,61,0.2),transparent 70%);pointer-events:none;"></div>
+    <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:10pt;font-weight:800;color:#C97B3D;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;position:relative;">📌 Project At a Glance</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;position:relative;">
+      <div style="text-align:center;">
+        <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:20pt;font-weight:900;color:#fff;">23</div>
+        <div style="font-size:7.5pt;color:rgba(255,255,255,0.5);margin-top:2px;">Pages Built</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:20pt;font-weight:900;color:#fff;">17</div>
+        <div style="font-size:7.5pt;color:rgba(255,255,255,0.5);margin-top:2px;">API Endpoints</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:20pt;font-weight:900;color:#fff;">3</div>
+        <div style="font-size:7.5pt;color:rgba(255,255,255,0.5);margin-top:2px;">AI Integrations</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:20pt;font-weight:900;color:#fff;">87%</div>
+        <div style="font-size:7.5pt;color:rgba(255,255,255,0.5);margin-top:2px;">ML Accuracy</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>SYNAPSE — InnovateX 2026 · Simply Updify</span>
+    <span style="color:#C97B3D;font-weight:700;">Thank You! 🙏</span>
+    <span>Page 10</span>
+  </div>
+</div>
+
+<!-- Print button (hidden in print) -->
+<div style="text-align:center;padding:30px;background:#f5f5f5;border-top:1px solid #ddd;" class="no-print">
+  <p style="font-size:10pt;color:#555;margin-bottom:16px;">📄 <strong>To save as PDF:</strong> Press <kbd style="background:#111;color:#fff;padding:3px 8px;border-radius:4px;">Ctrl + P</kbd> → Change destination to <strong>"Save as PDF"</strong> → Set layout to <strong>Portrait</strong> → <strong>Save</strong></p>
+  <button onclick="window.print()" style="padding:12px 32px;background:linear-gradient(135deg,#C97B3D,#D90429);color:#fff;border:none;border-radius:8px;font-size:12pt;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">
+    🖨️ Print / Save as PDF
+  </button>
+</div>
+
+<style>
+  @media print {
+    .no-print { display: none !important; }
+  }
+</style>
+
+</body>
+</html>

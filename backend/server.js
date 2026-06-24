@@ -412,7 +412,6 @@ app.post("/api/chat", async (req, res) => {
     }
     return res.json({ reply });
   }
-
   try {
     const thankYouNameText = userName ? `The candidate's name is ${userName}. Address the candidate by name (e.g. thank them using their name: "Thank you for sharing your background, ${userName}!") when they introduce themselves/share their background.` : "";
     const body = {
@@ -428,11 +427,11 @@ app.post("/api/chat", async (req, res) => {
         ]
       },
       generationConfig: {
-        maxOutputTokens: 100
+        maxOutputTokens: 75
       }
     };
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${geminiApiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${geminiApiKey}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

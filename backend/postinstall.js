@@ -2,15 +2,18 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
-if (process.env.NODE_ENV === "production" || process.env.RENDER === "true") {
-  console.log("[Postinstall] Production/Render environment detected. Skipping build-time Python installation.");
-  process.exit(0);
-}
+console.log("[Postinstall] Starting Python dependency verification/installation...");
 
 const venvPath = path.join(__dirname, "venv");
 const dotVenvPath = path.join(__dirname, ".venv");
+const reqPath = fs.existsSync(path.join(__dirname, "requirements.txt"))
+  ? path.join(__dirname, "requirements.txt")
+  : path.join(__dirname, "../requirements.txt");
+
+console.log(`[Postinstall] Using requirements file: ${reqPath}`);
 
 let pipCmd = "";
+let useBreakSystemPackages = false;
 
 if (process.platform === "win32") {
   if (fs.existsSync(path.join(venvPath, "Scripts", "pip.exe"))) {
@@ -21,24 +24,30 @@ if (process.platform === "win32") {
     pipCmd = "pip";
   }
 } else {
+  // Linux / macOS (e.g. Render)
   if (fs.existsSync(path.join(venvPath, "bin", "pip"))) {
     pipCmd = `"${path.join(venvPath, "bin", "pip")}"`;
   } else if (fs.existsSync(path.join(dotVenvPath, "bin", "pip"))) {
     pipCmd = `"${path.join(dotVenvPath, "bin", "pip")}"`;
   } else {
     pipCmd = "pip3";
+    useBreakSystemPackages = true; // Use system pip on Render, needs PEP 668 bypass
   }
 }
 
-console.log(`[Postinstall] Installing Python dependencies using: ${pipCmd}`);
+const installFlags = useBreakSystemPackages ? "--break-system-packages" : "";
+console.log(`[Postinstall] Installing packages via: ${pipCmd} install ${installFlags} -r "${reqPath}"`);
+
 try {
-  execSync(`${pipCmd} install -r ../requirements.txt`, { stdio: "inherit" });
+  execSync(`${pipCmd} install ${installFlags} -r "${reqPath}"`, { stdio: "inherit" });
+  console.log("[Postinstall] Python dependencies installed successfully.");
 } catch (err) {
-  console.warn("[Postinstall] Failed to install dependencies via primary pip command. Retrying with fallback...");
+  console.warn("[Postinstall] Primary installation failed. Retrying with --user --break-system-packages...");
   try {
-    const fallback = process.platform === "win32" ? "pip" : "pip3";
-    execSync(`${fallback} install -r ../requirements.txt`, { stdio: "inherit" });
+    execSync(`${pipCmd} install --user --break-system-packages -r "${reqPath}"`, { stdio: "inherit" });
+    console.log("[Postinstall] Python dependencies installed successfully (with user/break system packages flags).");
   } catch (fallbackErr) {
-    console.error("[Postinstall] All pip installation attempts failed. Chatbot and resume analyzer might not work.");
+    console.error("[Postinstall] All attempts to install Python dependencies failed:", fallbackErr.message);
   }
 }
+

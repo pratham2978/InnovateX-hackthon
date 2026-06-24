@@ -226,6 +226,7 @@
         let isCamOn = true;
         let codeEditor;
         let currentLanguage = 'java';
+        let interviewHistory = [];
 
         const LANGUAGE_TEMPLATES = {
             java: 'class Solution {\n    public static void main(String[] args) {\n        // Solve Two Sum in Java\n        \n    }\n}',
@@ -420,6 +421,7 @@
             
             input.value = '';
             appendChatMessage('You', text, true);
+            interviewHistory.push({ role: 'user', content: text });
             
             // Show typing indicator
             const typing = document.getElementById('chat-typing');
@@ -447,11 +449,12 @@
                 const res = await fetch(`${backendUrl}/api/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text, userName: username })
+                    body: JSON.stringify({ message: text, userName: username, history: interviewHistory })
                 });
                 const data = await res.json();
                 typing.classList.add('hidden');
                 
+                interviewHistory.push({ role: 'model', content: data.reply });
                 AlexAI.speak(data.reply);
             } catch (err) {
                 console.error(err);
@@ -500,7 +503,9 @@
                     };
                 }
                 
-                setTimeout(() => this.speak("Hey there, my name is Alex. To start off, could you please tell me about yourself and your educational background?"), 3500);
+                const greeting = "Hey there, my name is Alex. To start off, could you please tell me about yourself and your educational background?";
+                interviewHistory.push({ role: 'model', content: greeting });
+                setTimeout(() => this.speak(greeting), 3500);
             },
             
             speak(text) {
@@ -592,13 +597,16 @@
                     }
                 } catch(e) {}
 
+                interviewHistory.push({ role: 'user', content: input });
+
                 fetch(`${backendUrl}/api/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: input, userName: username })
+                    body: JSON.stringify({ message: input, userName: username, history: interviewHistory })
                 })
                 .then(res => res.json())
                 .then(data => {
+                    interviewHistory.push({ role: 'model', content: data.reply });
                     this.speak(data.reply);
                 })
                 .catch(err => {

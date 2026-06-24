@@ -414,20 +414,38 @@ app.post("/api/chat", async (req, res) => {
   }
   try {
     const thankYouNameText = userName ? `The candidate's name is ${userName}. Address the candidate by name (e.g. thank them using their name: "Thank you for sharing your background, ${userName}!") when they introduce themselves/share their background.` : "";
+    
+    // Construct Gemini contents array containing conversation history
+    let contents = [];
+    if (req.body.history && Array.isArray(req.body.history)) {
+      contents = req.body.history.map(h => ({
+        role: h.role === 'assistant' || h.role === 'model' || h.role === 'Alex' ? 'model' : 'user',
+        parts: [{ text: h.content || h.message || h.text || "" }]
+      })).filter(c => c.parts[0].text !== "");
+    }
+    
+    // Always append the current user message to contents if not already present
+    if (contents.length === 0 || contents[contents.length - 1].role !== 'user' || contents[contents.length - 1].parts[0].text !== userTranscript) {
+      contents.push({
+        role: "user",
+        parts: [{ text: userTranscript }]
+      });
+    }
+
+    // Keep only the last 10 messages of history to avoid token issues and maintain speed
+    if (contents.length > 10) {
+      contents = contents.slice(-10);
+    }
+
     const body = {
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: userTranscript }]
-        }
-      ],
+      contents: contents,
       systemInstruction: {
         parts: [
-          { text: `Role: Alex, SWE Interviewer. Topic: Mock Interview. Start with candidate's profile/introduction/education, then transition to the Two Sum coding challenge. ${thankYouNameText} Speak naturally and concisely (1-3 sentences). Do not use markdown, asterisks, or emojis.` }
+          { text: `Role: Alex, SWE Interviewer. Topic: Mock Interview. Start with candidate's profile/introduction/education, then transition to the Two Sum coding challenge. ${thankYouNameText} Guide them through coding it, asking for time/space complexity and code updates. Speak naturally and concisely (1-3 sentences). Do not use markdown, asterisks, or emojis.` }
         ]
       },
       generationConfig: {
-        maxOutputTokens: 75
+        maxOutputTokens: 80
       }
     };
 
